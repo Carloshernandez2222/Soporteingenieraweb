@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soporte Técnico</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; }
+        input, textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Registrar Caso</h2>
+    <form id="soporteForm">
+        <input type="text" id="nombre" placeholder="Nombre completo" required>
+        <input type="email" id="email" placeholder="Correo electrónico" required>
+        <textarea id="descripcion" placeholder="Describe tu problema" rows="4" required></textarea>
+        <button type="submit">Enviar Solicitud</button>
+    </form>
+</div>
+
+<script>
+    document.getElementById('soporteForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const params = new URLSearchParams({
+            nombre: document.getElementById('nombre').value,
+            email: document.getElementById('email').value,
+            descripcion: document.getElementById('descripcion').value
+        });
+
+        try {
+            const response = await fetch(`https://mi-app-fastapi-mateo-v1.azurewebsites.net/registrar?${params}`, {
+                method: 'POST'
+            });
+            
+            const data = await response.json();
+            alert(data.message || data.status);
+        } catch (error) {
+            alert("Error al conectar con el servidor");
+        }
+    });
+</script>
+</body>
+</html>

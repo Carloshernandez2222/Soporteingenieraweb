@@ -1,13 +1,27 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from src.RegisterRequest import ServicioSoporte
 from src.exceptions import NombreInvalidoError, CorreoInvalidoError, IssueInvalidoError
 
+# 1. Primero creamos la app
 test = FastAPI()
+
+# 2. Luego montamos la carpeta estática
+test.mount("/static", StaticFiles(directory="static"), name="static")
+
+# 3. Configuramos el resto
 servicio = ServicioSoporte()
 
-# --- Exception Handlers (Aquí es donde ocurre la magia) ---
+test.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# --- Exception Handlers ---
 @test.exception_handler(NombreInvalidoError)
 async def nombre_invalido_handler(request: Request, exc: NombreInvalidoError):
     return JSONResponse(status_code=400, content={"status": "error", "message": str(exc)})
@@ -22,9 +36,9 @@ async def issue_invalido_handler(request: Request, exc: IssueInvalidoError):
 
 # --- Rutas ---
 
-@test.get("/") 
-def home(): 
-    return {"mensaje": "Mi API está funcionando"} 
+@test.get("/")
+async def read_index():
+    return FileResponse("static/index.html")
 
 @test.get("/eventos") 
 def listar_eventos(): 
@@ -32,6 +46,4 @@ def listar_eventos():
 
 @test.post("/registrar")
 def registrar_caso_api(nombre: str, email: str, descripcion: str):
-    # Ya no necesitas el try/except aquí. 
-    # Si 'servicio' lanza un error, FastAPI lo captura automáticamente arriba.
     return servicio.registrar_caso(nombre, email, descripcion)
