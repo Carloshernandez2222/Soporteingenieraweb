@@ -1,11 +1,15 @@
 import re
 import sqlite3
+import os
 from .exceptions import CorreoInvalidoError, NombreInvalidoError, IssueInvalidoError
 
 class ServicioSoporte:
     def __init__(self):
+        # Ruta absoluta para persistencia en Azure App Service
+        self.db_path = "/home/site/wwwroot/soporte.db"
+        
         # Creamos la tabla al instanciar la clase (se ejecuta una sola vez)
-        conn = sqlite3.connect("soporte.db")
+        conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS casos (
@@ -32,8 +36,8 @@ class ServicioSoporte:
         if not descripcion or not descripcion.strip():
             raise IssueInvalidoError("La descripción del issue no puede estar vacía.")
 
-        # Guardado en base de datos
-        conn = sqlite3.connect("soporte.db")
+        # Guardado en base de datos usando la ruta absoluta definida
+        conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO casos (nombre, email, descripcion) VALUES (?, ?, ?)",
