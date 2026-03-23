@@ -3,8 +3,8 @@ from src.RegisterRequest import ServicioSoporte
 from src.exceptions import CorreoInvalidoError, NombreInvalidoError, IssueInvalidoError
 
 @pytest.fixture
-def servicio():
-    return ServicioSoporte()
+def servicio(tmp_path):
+    return ServicioSoporte(db_path=str(tmp_path / "soporte_unit.sqlite"))
 
 @pytest.mark.parametrize("nombre, email, descripcion, escenario", [
     # --- CASOS DE ÉXITO ---
@@ -16,11 +16,12 @@ def servicio():
     # --- CASOS DE ERROR: NOMBRE ---
     ("", "test@mail.com", "Desc válida", "5. Nombre vacío"),
     ("   ", "test@mail.com", "Desc válida", "6. Nombre espacios"),
+    ("Juan123", "test@mail.com", "Desc válida", "6b. Nombre con números"),
 
     # --- CASOS DE ERROR: EMAIL ---
     ("Mateo", "correo-sin-arroba", "Desc válida", "7. Email sin formato"),
     ("Mateo", "mateo@dominio", "Desc válida", "8. Email sin punto"),
-    ("Mateo", "mateo!#$@mail.com", "Desc válida", "9. Caracteres prohibidos"),
+    ("Mateo", "()[]@mail.com", "Desc válida", "9. Caracteres prohibidos en local"),
     ("Mateo", "@nomail.com", "Desc válida", "10. Sin usuario"),
 
     # --- CASOS DE ERROR: DESCRIPCIÓN ---

@@ -2,11 +2,16 @@
 
 venv/ 
 
+.venv/
+
 env/ 
 
 ENV/ 
 
 .env 
+
+frontend/node_modules/
+*.tsbuildinfo
 
  
 
@@ -37,6 +42,11 @@ __pycache__/
 *.log 
 
 .DS_Store 
+
+# SQLite local de desarrollo
+
+local.db
+*.db
 
  
 
