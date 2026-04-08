@@ -5,8 +5,14 @@ from src.core.exceptions import CorreoInvalidoError, NombreInvalidoError, IssueI
 
 class ServicioSoporte:
     def __init__(self):
-        # Ruta absoluta para persistencia en Azure App Service
-        self.db_path = "/home/site/wwwroot/soporte.db"
+        # =========================================================
+        # RUTA DINÁMICA (A prueba de balas para Local y Azure)
+        # =========================================================
+        # Obtiene la ruta de la carpeta donde está este archivo exacto
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        # Une esa carpeta con el nombre del archivo de la base de datos
+        self.db_path = os.path.join(base_dir, "soporte.db")
         
         # Creamos la tabla al instanciar la clase (se ejecuta una sola vez)
         conn = sqlite3.connect(self.db_path)
@@ -36,7 +42,7 @@ class ServicioSoporte:
         if not descripcion or not descripcion.strip():
             raise IssueInvalidoError("La descripción del issue no puede estar vacía.")
 
-        # Guardado en base de datos usando la ruta absoluta definida
+        # Guardado en base de datos usando la ruta dinámica
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
         cursor.execute(
