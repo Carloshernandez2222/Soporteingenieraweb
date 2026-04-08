@@ -1,17 +1,35 @@
 :root {
-    /* ... (mantén tus variables de color principal, success, error) ... */
+    /* 1. COLORES PRINCIPALES (Alto Contraste) */
+    --color-primary: #0A58CA;        /* Azul corporativo fuerte (imposible de perder) */
+    --color-primary-hover: #084298;  /* Azul más oscuro al pasar el mouse */
+    --color-background: #F8F9FA;     /* Fondo gris súper claro para que las tarjetas resalten */
+    --color-surface: #FFFFFF;        /* Blanco puro para las tarjetas y el header */
 
-    /* COLORES DE DISEÑO WEB ESTÁNDAR */
-    --color-header: #FFFFFF;        /* Header/Footer limpios y blancos */
-    --color-header-text: #1A1A1A;   /* Texto oscuro */
-    --color-shadow: rgba(0,0,0,0.1); /* Sombra suave para profesionalismo */
+    /* 2. TEXTOS */
+    --color-text-main: #212529;      /* Casi negro para máxima legibilidad */
+    --color-text-muted: #6C757D;     /* Gris oscuro para subtítulos */
 
-    /* TIPOGRAFÍA */
+    /* 3. ALERTAS Y ESTADOS */
+    --color-success: #0F5132;
+    --color-success-bg: #D1E7DD;
+    --color-error: #842029;
+    --color-error-bg: #F8D7DA;
+
+    /* 4. BORDES Y SOMBRAS */
+    --border-color: #DEE2E6;         /* Bordes suaves para los inputs */
+    --border-radius: 8px;            /* Esquinas redondeadas modernas */
+    --shadow-soft: 0 4px 12px rgba(0,0,0,0.08); /* Sombra elegante para dar profundidad */
+
+    /* 5. TAMAÑOS INCLUSIVOS (Para dedos grandes en pantallas táctiles) */
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --input-height: 55px;            /* Inputs gigantes */
+    --button-height: 60px;           /* Botones masivos, imposibles de fallar */
+
+    /* 6. TIPOGRAFÍA */
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    --text-base: 18px;
-    --text-small: 0.9rem;           /* Para el footer */
-
-    /* LAYOUT PROFESIONAL */
-    --header-height: 80px;
-    --footer-height: 100px;
+    --text-title: 28px;
+    --text-base: 18px;               /* Letra base grande */
+    --text-button: 20px;             /* Letra de botones extra grande y legible */
 }

@@ -1,8 +1,45 @@
 /* ==========================================================================
-   ESTILOS GENERALES Y LAYOUT RESPONSIVO
+   1. VARIABLES DE DISEÑO (Siempre van primero)
    ========================================================================== */
+:root {
+    /* COLORES PRINCIPALES (Alto Contraste) */
+    --color-primary: #0A58CA;        
+    --color-primary-hover: #084298;  
+    --color-background: #F8F9FA;     
+    --color-surface: #FFFFFF;        
 
-/* Reset básico para evitar márgenes raros del navegador */
+    /* TEXTOS */
+    --color-text-main: #212529;      
+    --color-text-muted: #6C757D;     
+
+    /* ALERTAS Y ESTADOS */
+    --color-success: #0F5132;
+    --color-success-bg: #D1E7DD;
+    --color-error: #842029;
+    --color-error-bg: #F8D7DA;
+
+    /* BORDES Y SOMBRAS */
+    --border-color: #DEE2E6;         
+    --border-radius: 8px;            
+    --shadow-soft: 0 4px 12px rgba(0,0,0,0.08); 
+
+    /* TAMAÑOS INCLUSIVOS */
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --input-height: 55px;            
+    --button-height: 60px;           
+
+    /* TIPOGRAFÍA */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --text-title: 28px;
+    --text-base: 18px;               
+    --text-button: 20px;             
+}
+
+/* ==========================================================================
+   2. RESET Y LAYOUT GENERAL
+   ========================================================================== */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -14,13 +51,74 @@ body {
     background-color: var(--color-background);
     color: var(--color-text-main);
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
     min-height: 100vh;
-    padding: var(--spacing-md);
+    margin: 0;
 }
 
-/* Contenedor central simulando una App (Ideal para el celular de nuestro usuario) */
+/* ==========================================================================
+   3. ESTRUCTURA PROFESIONAL (Header, Main, Footer)
+   ========================================================================== */
+.app-header {
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.logo {
+    font-weight: bold;
+    font-size: 1.5rem;
+    color: var(--color-primary);
+}
+
+.main-nav {
+    display: flex;
+    gap: var(--spacing-md);
+}
+
+.nav-link {
+    text-decoration: none;
+    color: var(--color-text-main);
+    font-weight: 600;
+}
+
+.nav-link:hover {
+    color: var(--color-primary);
+}
+
+.app-main {
+    flex: 1; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: var(--spacing-lg);
+    width: 100%;
+}
+
+.app-footer {
+    background-color: var(--color-surface);
+    padding: var(--spacing-md);
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.9rem;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ==========================================================================
+   4. COMPONENTES Y FORMULARIOS
+   ========================================================================== */
 .support-container {
     background-color: var(--color-surface);
     width: 100%;
@@ -30,9 +128,6 @@ body {
     box-shadow: var(--shadow-soft);
 }
 
-/* PATRÓN F: 
-  Títulos y textos alineados a la izquierda para escaneo rápido 
-*/
 .support-title {
     font-size: var(--text-title);
     margin-bottom: var(--spacing-sm);
@@ -46,7 +141,6 @@ body {
     text-align: left;
 }
 
-/* FORMULARIO */
 .form-group {
     margin-bottom: var(--spacing-lg);
     display: flex;
@@ -60,7 +154,6 @@ label {
     font-size: var(--text-base);
 }
 
-/* Inputs gigantes para evitar errores al teclear en móviles */
 input, textarea {
     width: 100%;
     min-height: var(--input-height);
@@ -74,7 +167,7 @@ input, textarea {
 
 input:focus, textarea:focus {
     outline: none;
-    border-color: var(--color-primary); /* Resalta en verde corporativo al tocar */
+    border-color: var(--color-primary);
 }
 
 textarea {
@@ -82,7 +175,6 @@ textarea {
     resize: vertical;
 }
 
-/* Botón de acción principal: Imposible no verlo */
 .btn-submit {
     width: 100%;
     height: var(--button-height);
@@ -101,18 +193,23 @@ textarea {
     background-color: var(--color-primary-hover);
 }
 
-/* Alertas para retroalimentación visual inmediata */
 .alert {
     padding: var(--spacing-md);
     border-radius: var(--border-radius);
     margin-bottom: var(--spacing-lg);
     font-weight: bold;
     text-align: center;
-    display: none; /* Se oculta por defecto hasta que JavaScript lo active */
+    display: none;
 }
 
 .alert-success { 
     background-color: var(--color-success-bg); 
     color: var(--color-success); 
     border: 1px solid var(--color-success);
+}
+
+.alert-error {
+    background-color: var(--color-error-bg);
+    color: var(--color-error);
+    border: 1px solid var(--color-error);
 }
