@@ -1,33 +1,30 @@
-from fastapi import FastAPI, Request, HTTPException, Query
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Optional
 
-# Importaciones desde tu estructura de carpetas
-from src.RegisterRequest import ServicioSoporte
-from src.exceptions import NombreInvalidoError, CorreoInvalidoError, IssueInvalidoError
-from src.models import CasoSoporte # Importamos el modelo desde src/models.py
+# Importamos los errores desde la nueva capa "core"
+from src.core.exceptions import NombreInvalidoError, CorreoInvalidoError, IssueInvalidoError
 
-# --- Persistencia Temporal ---
-# Lista vacía para cumplir con el punto A del taller
-db_temporal: List[dict] = []
+# Importamos el enrutador que creamos en la capa "api"
+from src.api.routers import router
 
 # 1. Creamos la app
 test = FastAPI()
 
-# 2. Montamos la carpeta estática
-test.mount("/static", StaticFiles(directory="static"), name="static")
-
-# 3. Instanciamos el servicio (esto creará la DB SQLite si no existe)
-servicio = ServicioSoporte()
-
+# 2. Configuración de CORS
 test.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 3. Montamos la carpeta estática del Frontend
+test.mount("/static", StaticFiles(directory="static"), name="static")
+
+# 4. Incluimos todas las rutas modulares
+test.include_router(router)
 
 # --- Exception Handlers ---
 @test.exception_handler(NombreInvalidoError)
@@ -41,43 +38,3 @@ async def correo_invalido_handler(request: Request, exc: CorreoInvalidoError):
 @test.exception_handler(IssueInvalidoError)
 async def issue_invalido_handler(request: Request, exc: IssueInvalidoError):
     return JSONResponse(status_code=400, content={"status": "error", "message": str(exc)})
-
-# --- Rutas ---
-
-@test.get("/")
-async def read_index():
-    return FileResponse("static/index.html")
-
-# 1. Endpoint lectura Total (GET)
-@test.get("/casos/todos")
-def obtener_todos():
-    return db_temporal
-
-# 2. Endpoint creación (POST) usando el modelo de src/models.py
-@test.post("/casos/crear")
-def crear_caso_temporal(caso: CasoSoporte):
-    # Usamos .dict() como pide el taller
-    nuevo_registro = caso.dict()
-    db_temporal.append(nuevo_registro)
-    return {"status": "success", "data": nuevo_registro}
-
-# 3 y 4. Búsqueda Específica y Error 404
-@test.get("/casos/{id}")
-def buscar_caso(id: int):
-    for registro in db_temporal:
-        if registro["id"] == id:
-            return registro
-    raise HTTPException(status_code=404, detail="Caso no encontrado en la lista temporal")
-
-# 5. Filtrado Dinámico (Query Parameter)
-@test.get("/casos/filtrar/")
-def filtrar_por_categoria(categoria: Optional[str] = Query(None)):
-    if categoria:
-        resultado = [c for c in db_temporal if c["categoria"].lower() == categoria.lower()]
-        return resultado
-    return db_temporal
-
-# Ruta original para persistencia en SQLite
-@test.post("/registrar")
-def registrar_caso_api(nombre: str, email: str, descripcion: str):
-    return servicio.registrar_caso(nombre, email, descripcion)

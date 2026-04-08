@@ -1,0 +1,118 @@
+/* ==========================================================================
+   ESTILOS GENERALES Y LAYOUT RESPONSIVO
+   ========================================================================== */
+
+/* Reset básico para evitar márgenes raros del navegador */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--color-background);
+    color: var(--color-text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: var(--spacing-md);
+}
+
+/* Contenedor central simulando una App (Ideal para el celular de nuestro usuario) */
+.support-container {
+    background-color: var(--color-surface);
+    width: 100%;
+    max-width: 500px;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-soft);
+}
+
+/* PATRÓN F: 
+  Títulos y textos alineados a la izquierda para escaneo rápido 
+*/
+.support-title {
+    font-size: var(--text-title);
+    margin-bottom: var(--spacing-sm);
+    text-align: left;
+}
+
+.support-subtitle {
+    color: var(--color-text-muted);
+    font-size: var(--text-base);
+    margin-bottom: var(--spacing-lg);
+    text-align: left;
+}
+
+/* FORMULARIO */
+.form-group {
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+label {
+    font-weight: 600;
+    margin-bottom: var(--spacing-sm);
+    font-size: var(--text-base);
+}
+
+/* Inputs gigantes para evitar errores al teclear en móviles */
+input, textarea {
+    width: 100%;
+    min-height: var(--input-height);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: var(--text-base);
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+}
+
+input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--color-primary); /* Resalta en verde corporativo al tocar */
+}
+
+textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Botón de acción principal: Imposible no verlo */
+.btn-submit {
+    width: 100%;
+    height: var(--button-height);
+    background-color: var(--color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: var(--text-button);
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: var(--spacing-md);
+}
+
+.btn-submit:hover {
+    background-color: var(--color-primary-hover);
+}
+
+/* Alertas para retroalimentación visual inmediata */
+.alert {
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-lg);
+    font-weight: bold;
+    text-align: center;
+    display: none; /* Se oculta por defecto hasta que JavaScript lo active */
+}
+
+.alert-success { 
+    background-color: var(--color-success-bg); 
+    color: var(--color-success); 
+    border: 1px solid var(--color-success);
+}

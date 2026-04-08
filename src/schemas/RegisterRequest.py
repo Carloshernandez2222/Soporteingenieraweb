@@ -1,7 +1,7 @@
 import re
 import sqlite3
 import os
-from .exceptions import CorreoInvalidoError, NombreInvalidoError, IssueInvalidoError
+from src.core.exceptions import CorreoInvalidoError, NombreInvalidoError, IssueInvalidoError
 
 class ServicioSoporte:
     def __init__(self):

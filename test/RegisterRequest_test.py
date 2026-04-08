@@ -1,6 +1,10 @@
 import pytest
-from src.RegisterRequest import ServicioSoporte
-from src.exceptions import CorreoInvalidoError, NombreInvalidoError, IssueInvalidoError
+
+# 1. Actualizamos la ruta al esquema (ahora en src/schemas)
+from src.schemas.RegisterRequest import ServicioSoporte
+
+# 2. Actualizamos la ruta a las excepciones (ahora en src/core)
+from src.core.exceptions import CorreoInvalidoError, NombreInvalidoError, IssueInvalidoError
 
 @pytest.fixture
 def servicio():

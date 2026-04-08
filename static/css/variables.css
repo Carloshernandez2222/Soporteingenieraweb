@@ -1,0 +1,17 @@
+:root {
+    /* ... (mantén tus variables de color principal, success, error) ... */
+
+    /* COLORES DE DISEÑO WEB ESTÁNDAR */
+    --color-header: #FFFFFF;        /* Header/Footer limpios y blancos */
+    --color-header-text: #1A1A1A;   /* Texto oscuro */
+    --color-shadow: rgba(0,0,0,0.1); /* Sombra suave para profesionalismo */
+
+    /* TIPOGRAFÍA */
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --text-base: 18px;
+    --text-small: 0.9rem;           /* Para el footer */
+
+    /* LAYOUT PROFESIONAL */
+    --header-height: 80px;
+    --footer-height: 100px;
+}
