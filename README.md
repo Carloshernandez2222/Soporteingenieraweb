@@ -37,9 +37,24 @@ Ya tienes referencia en `.azure/config` (grupo, plan, web app). Pasos habituales
 
 ### Si ves `Frontend no construido` en el navegador
 
-Eso significa que en el servidor **no existe** `frontend/dist/index.html`. Esa carpeta **no se sube con git** (está ignorada); hay que generarla en el despliegue o en tu máquina antes del zip.
+Eso significa que en el servidor **no existe** `frontend/dist/index.html`.
 
-**Opción A (recomendada en Azure):** en **Configuration → Application settings** añada:
+**Si usas `az webapp up`:** el CLI arma el zip **saltándose todo lo que está en `.gitignore`**. Como **`frontend/dist/` está ignorado**, **aunque hayas hecho `npm run build` en local, esa carpeta no entra en el zip** y Azure nunca recibe el front. No es que el build falle: simplemente **no se sube**.
+
+**Arreglo inmediato (recomendado con `az webapp up` / zip):**
+
+```bash
+bash scripts/azure-deploy-zip.sh
+az webapp deploy --resource-group mi-app-fastapi-mateo-v1-rg --name mi-app-fastapi-mateo-v1 --src-path azure-deploy.zip --type zip
+```
+
+(Si `az webapp deploy` no existe en tu versión del CLI: `az webapp deployment source config-zip --resource-group ... --name ... --src azure-deploy.zip`.)
+
+El script compila el front y crea **`azure-deploy.zip`** incluyendo `frontend/dist` (ignorado en git pero sí en el paquete).
+
+**Alternativa:** no uses zip local y deja que el servidor compile con **`POST_BUILD_COMMAND`** + **`WEBSITE_NODE_DEFAULT_VERSION`** (tabla siguiente).
+
+**Opción A (recomendada si despliegas desde Git en el portal):** en **Configuration → Application settings** añada:
 
 | Nombre | Valor |
 |--------|--------|
