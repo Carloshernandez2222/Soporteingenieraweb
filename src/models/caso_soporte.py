@@ -3,7 +3,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from .constants import MAX_NOMBRE_LEN
+from ..constants import MAX_NOMBRE_LEN
 
 Prioridad = Annotated[
     float,
@@ -17,7 +17,7 @@ Prioridad = Annotated[
 
 
 class CasoSoporte(BaseModel):
-    """Caso almacenado en la lista temporal en memoria (taller)."""
+    """Modelo de entrada: caso en la lista temporal en memoria (taller)."""
 
     model_config = ConfigDict(
         json_schema_extra={

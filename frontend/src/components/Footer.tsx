@@ -79,12 +79,12 @@ export function Footer() {
               <input
                 type="email"
                 placeholder="Your email address"
-                className="flex-1 px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className="flex-1 px-4 py-2.5 rounded-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 aria-label="Email para suscripción"
               />
               <button
                 type="submit"
-                className="px-4 py-2.5 bg-primary rounded-lg hover:bg-primary-dark transition-colors"
+                className="px-4 py-2.5 bg-primary rounded-full hover:bg-primary-dark transition-colors"
                 aria-label="Enviar"
               >
                 <svg

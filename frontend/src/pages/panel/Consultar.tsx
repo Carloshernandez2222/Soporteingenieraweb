@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { mostrarDetalleApi } from "@/lib/panelApiHints";
 import { fetchJson, mensajeError } from "../../api";
 import JsonBlock from "../../components/JsonBlock";
 import { IconSearch } from "../../components/Icons";
@@ -9,6 +11,8 @@ import type { CasoSqlite, CasoTemporal } from "../../types";
 
 export default function Consultar() {
   useDocumentTitle("Consultas");
+  const { user } = useAuth();
+  const verApi = mostrarDetalleApi(user?.rol);
   const [tempId, setTempId] = useState("");
   const [tempJson, setTempJson] = useState<string | null>(null);
   const [tempFb, setTempFb] = useState<string | null>(null);
@@ -87,21 +91,33 @@ export default function Consultar() {
       <PageHeader
         icon={<IconSearch size={26} />}
         title="Consultas y seguimiento"
-        subtitle="Tres vías: casos de demostración en memoria, historial por correo en SQLite y detalle de ticket por número."
+        subtitle={
+          verApi
+            ? "Tres vías: caso del taller en SQLite, historial de tickets por correo en SQLite y detalle de ticket por número."
+            : "Tres formas de consulta: caso del taller, historial por correo y detalle por número de ticket."
+        }
         meta={
-          <span className="badge ok" style={{ fontSize: "0.72rem" }}>
-            GET
-          </span>
+          verApi ? (
+            <span className="badge ok" style={{ fontSize: "0.72rem" }}>
+              GET
+            </span>
+          ) : undefined
         }
       />
 
       <details className="accordion animate-in" open>
-        <summary>Caso en memoria (laboratorio)</summary>
+        <summary>Caso del taller (SQLite)</summary>
         <div className="accordion-body">
-          <p className="hint" style={{ marginTop: 0 }}>
-            Endpoint <code>GET /casos/{"{id}"}</code>. Solo aplica a registros creados con{" "}
-            <code>POST /casos/crear</code>.
-          </p>
+          {verApi ? (
+            <p className="hint" style={{ marginTop: 0 }}>
+              Endpoint <code>GET /casos/{"{id}"}</code>. Registros creados con{" "}
+              <code>POST /casos/crear</code> (tabla <code>casos_taller</code>).
+            </p>
+          ) : (
+            <p className="hint" style={{ marginTop: 0 }}>
+              Use el identificador del caso creado desde «Crear caso» en el taller.
+            </p>
+          )}
           <div className="row-flex">
             <div className="field">
               <label htmlFor="tid">Identificador</label>
@@ -138,9 +154,15 @@ export default function Consultar() {
       <details className="accordion animate-in" style={{ animationDelay: "0.06s" }}>
         <summary>Tickets por correo (base de datos)</summary>
         <div className="accordion-body">
-          <p className="hint" style={{ marginTop: 0 }}>
-            Endpoint <code>GET /casos/sqlite?email=</code>. Lista ordenada por id descendente.
-          </p>
+          {verApi ? (
+            <p className="hint" style={{ marginTop: 0 }}>
+              Endpoint <code>GET /casos/sqlite?email=</code>. Lista ordenada por id descendente.
+            </p>
+          ) : (
+            <p className="hint" style={{ marginTop: 0 }}>
+              Lista los tickets asociados a ese correo, del más reciente al más antiguo.
+            </p>
+          )}
           <div className="row-flex">
             <div className="field">
               <label htmlFor="em">Correo del solicitante</label>
@@ -219,9 +241,15 @@ export default function Consultar() {
       <details className="accordion animate-in" style={{ animationDelay: "0.12s" }}>
         <summary>Detalle de ticket por número</summary>
         <div className="accordion-body">
-          <p className="hint" style={{ marginTop: 0 }}>
-            Endpoint <code>GET /casos/persistidos/{"{id}"}</code>. Devuelve el registro completo en SQLite.
-          </p>
+          {verApi ? (
+            <p className="hint" style={{ marginTop: 0 }}>
+              Endpoint <code>GET /casos/persistidos/{"{id}"}</code>. Devuelve el registro completo en SQLite.
+            </p>
+          ) : (
+            <p className="hint" style={{ marginTop: 0 }}>
+              Muestra el ticket completo a partir del número asignado al registrar la incidencia.
+            </p>
+          )}
           <div className="row-flex">
             <div className="field">
               <label htmlFor="pid">Número de ticket</label>

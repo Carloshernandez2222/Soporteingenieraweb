@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { AuthLogo } from "./AuthLogo";
 import { InputField } from "./InputField";
 import { SocialLoginButtons } from "./SocialLoginButtons";
@@ -9,8 +10,23 @@ import { login as apiLogin } from "@/lib/trackaidApi";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function destinoTrasLogin(state: unknown): string {
+  const from = state && typeof state === "object" && "from" in state ? (state as { from?: string }).from : undefined;
+  if (
+    typeof from === "string" &&
+    from.startsWith("/") &&
+    !from.startsWith("/iniciar-sesion") &&
+    !from.startsWith("/registro")
+  ) {
+    return from;
+  }
+  return "/panel";
+}
+
 export function LoginForm() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { setUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -19,10 +35,12 @@ export function LoginForm() {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sugerirRegistro, setSugerirRegistro] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setEmailError("");
+    setSugerirRegistro(false);
     setShowErrorToast(false);
     if (!EMAIL_REGEX.test(email.trim())) {
       setEmailError("Correo electrónico inválido");
@@ -38,17 +56,22 @@ export function LoginForm() {
     const { data, error } = await apiLogin({ email: email.trim(), password });
     setLoading(false);
     if (error) {
-      if (error.code === "USER_NOT_FOUND" || error.message.toLowerCase().includes("correo")) {
-        setEmailError(error.message);
+      const msg = error.message ?? "Algo salió mal";
+      if (error.code === "USER_NOT_FOUND") {
+        setEmailError(msg);
+        setSugerirRegistro(true);
+      } else if (msg.toLowerCase().includes("correo")) {
+        setEmailError(msg);
       } else {
-        setErrorToastMessage(error.message);
+        setErrorToastMessage(msg);
         setShowErrorToast(true);
         setTimeout(() => setShowErrorToast(false), 4000);
       }
       return;
     }
-    if (data?.success) {
-      navigate("/");
+    if (data?.success && data.user) {
+      setUser(data.user);
+      navigate(destinoTrasLogin(location.state), { replace: true });
     }
   }
 
@@ -58,7 +81,14 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col items-center">
+    <div className="w-full max-w-md mx-auto flex flex-col items-stretch">
+      <Link
+        to="/"
+        className="self-start text-sm font-medium text-teal-600 hover:text-teal-700 mb-6"
+      >
+        regresar
+      </Link>
+      <div className="flex flex-col items-center w-full">
       <AuthLogo />
       <h1 className="mt-8 text-2xl font-bold text-primary text-center">
         Cada pedido es una oportunidad que no se debe perder.
@@ -79,8 +109,17 @@ export function LoginForm() {
           onChange={(e) => {
             setEmail(e.target.value);
             if (emailError) setEmailError("");
+            setSugerirRegistro(false);
           }}
         />
+        {sugerirRegistro && (
+          <p className="text-sm text-center text-gray-600 -mt-2">
+            <Link to="/registro" className="text-teal-600 hover:text-teal-700 font-medium">
+              Regístrate aquí
+            </Link>{" "}
+            si aún no tienes cuenta.
+          </p>
+        )}
         <div>
           <InputField
             label="Contraseña"
@@ -109,6 +148,13 @@ export function LoginForm() {
           {loading ? "Entrando..." : "Iniciar sesión"}
         </button>
       </form>
+
+      <p className="mt-6 text-sm text-gray-600 text-center">
+        ¿No tienes cuenta?{" "}
+        <Link to="/registro" className="text-teal-600 hover:text-teal-700 font-medium">
+          Regístrate
+        </Link>
+      </p>
 
       <div className="mt-6 w-full">
         <p className="text-center text-sm text-gray-500 mb-4">o continúa con</p>
@@ -139,6 +185,7 @@ export function LoginForm() {
           onClose={() => setShowSuccessToast(false)}
         />
       )}
+      </div>
     </div>
   );
 }

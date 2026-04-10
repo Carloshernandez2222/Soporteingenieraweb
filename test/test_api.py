@@ -9,11 +9,13 @@ from src.rate_limit import reiniciar_limites_para_tests
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "soporte_api.sqlite"))
+    from src.dependencies import reiniciar_servicios
+
+    reiniciar_servicios()
     import conection
 
     importlib.reload(conection)
     reiniciar_limites_para_tests()
-    conection.db_temporal.clear()
     tc = TestClient(conection.test)
     yield tc
     reiniciar_limites_para_tests()
@@ -98,6 +100,21 @@ def test_registrar_y_listar_sqlite(client):
     r3 = client.get(f"/casos/persistidos/{j['caso_id']}")
     assert r3.status_code == 200
     assert r3.json()["data"]["email"] == "pedro@example.com"
+
+    r4 = client.get(
+        "/casos/sqlite/por-solicitante",
+        params={"email": "pedro@example.com", "nombre": "Pedro"},
+    )
+    assert r4.status_code == 200
+    filtrada = r4.json()["data"]
+    assert len(filtrada) >= 1
+    assert filtrada[0]["nombre"] == "Pedro"
+
+    r5 = client.get("/casos/sqlite/todos")
+    assert r5.status_code == 200
+    todos = r5.json()["data"]
+    assert len(todos) >= 1
+    assert any(x["email"] == "pedro@example.com" for x in todos)
 
 
 def test_persistidos_404(client):

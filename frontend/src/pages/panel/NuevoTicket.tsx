@@ -1,5 +1,8 @@
 import { FormEvent, useState } from "react";
 import { fetchJson, mensajeError } from "../../api";
+import { useAuth } from "@/context/AuthContext";
+import { mostrarDetalleApi } from "@/lib/panelApiHints";
+import { normalizarRol } from "@/lib/roles";
 import { IconCheck, IconTicket } from "../../components/Icons";
 import PageHeader from "../../components/PageHeader";
 import Spinner from "../../components/Spinner";
@@ -12,6 +15,8 @@ const MAX_DESC = 4000;
 
 export default function NuevoTicket() {
   useDocumentTitle("Nuevo ticket");
+  const { user } = useAuth();
+  const verApi = mostrarDetalleApi(user?.rol);
   const [loading, setLoading] = useState(false);
   const [fb, setFb] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [nombreLen, setNombreLen] = useState(0);
@@ -30,6 +35,8 @@ export default function NuevoTicket() {
       nombre: String(fd.get("nombre") ?? "").trim(),
       email: String(fd.get("email") ?? "").trim(),
       descripcion: String(fd.get("descripcion") ?? "").trim(),
+      categoria: "general",
+      creado_por_rol: normalizarRol(user?.rol),
     });
     setLoading(true);
     try {
@@ -54,9 +61,11 @@ export default function NuevoTicket() {
         title="Registrar incidencia"
         subtitle="Abre un ticket en la base de datos. Los datos se validan en el servidor: nombre sin dígitos, correo normalizado y límites de longitud."
         meta={
-          <span className="badge ok" style={{ fontSize: "0.72rem" }}>
-            POST /registrar
-          </span>
+          verApi ? (
+            <span className="badge ok" style={{ fontSize: "0.72rem" }}>
+              POST /registrar
+            </span>
+          ) : undefined
         }
       />
 
@@ -89,6 +98,8 @@ export default function NuevoTicket() {
               maxLength={254}
               autoComplete="email"
               placeholder="nombre@organizacion.com"
+              defaultValue={user?.email ?? ""}
+              key={user?.email ?? "sin-correo"}
             />
             <p className="hint">Se usará para localizar sus tickets posteriores.</p>
           </div>

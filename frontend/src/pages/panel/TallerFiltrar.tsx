@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { fetchJson, mensajeError } from "../../api";
+import { useAuth } from "@/context/AuthContext";
+import { mostrarDetalleApi } from "@/lib/panelApiHints";
 import { IconSearch } from "../../components/Icons";
 import PageHeader from "../../components/PageHeader";
 import Spinner from "../../components/Spinner";
@@ -8,6 +10,8 @@ import type { CasoTemporal } from "../../types";
 
 export default function TallerFiltrar() {
   useDocumentTitle("Filtro por categoría");
+  const { user } = useAuth();
+  const verApi = mostrarDetalleApi(user?.rol);
   const [cat, setCat] = useState("");
   const [rows, setRows] = useState<CasoTemporal[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -35,11 +39,13 @@ export default function TallerFiltrar() {
       <PageHeader
         icon={<IconSearch size={26} />}
         title="Filtrar por categoría"
-        subtitle="Comparación sin distinguir mayúsculas. Si deja el campo vacío, se obtiene el listado completo en memoria."
+        subtitle="Comparación sin distinguir mayúsculas. Si deja el campo vacío, se obtiene el listado completo desde SQLite."
         meta={
-          <span className="badge ok" style={{ fontSize: "0.72rem" }}>
-            GET /casos/filtrar
-          </span>
+          verApi ? (
+            <span className="badge ok" style={{ fontSize: "0.72rem" }}>
+              GET /casos/filtrar
+            </span>
+          ) : undefined
         }
       />
       <div className="card animate-in">

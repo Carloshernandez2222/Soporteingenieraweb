@@ -5,7 +5,6 @@ import {
   IdealParaEmpresas,
   CasoExito,
   Estadisticas,
-  CTA,
   Footer,
 } from "@/components";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -20,7 +19,6 @@ export default function Landing() {
       <IdealParaEmpresas />
       <CasoExito />
       <Estadisticas />
-      <CTA />
       <Footer />
     </main>
   );

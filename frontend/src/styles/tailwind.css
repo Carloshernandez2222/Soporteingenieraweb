@@ -7,4 +7,50 @@
   --primary-dark: #4a3d72;
   --foreground: #2d2d2d;
   --background: #ffffff;
+  /* Alineado con tailwind.config (Plus Jakarta Sans) */
+  font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+  /* Formularios nativos claros por defecto; el panel usa .panel-theme { color-scheme: dark } */
+  color-scheme: light;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/*
+ * Login / registro (TrackAid): el sistema o el autofill pueden pintar inputs oscuros.
+ * Forzamos tema claro y fondo blanco legible al enfocar y con autocompletado.
+ */
+.trackaid-public {
+  color-scheme: light;
+}
+
+.trackaid-public input:not([type="checkbox"]):not([type="radio"]),
+.trackaid-public textarea {
+  color-scheme: light;
+  background-color: #ffffff;
+  color: #1f2937;
+}
+
+.trackaid-public input:not([type="checkbox"]):not([type="radio"]):focus,
+.trackaid-public textarea:focus {
+  background-color: #ffffff;
+  color: #111827;
+}
+
+.trackaid-public input:not([type="checkbox"]):not([type="radio"]):-webkit-autofill,
+.trackaid-public input:not([type="checkbox"]):not([type="radio"]):-webkit-autofill:hover,
+.trackaid-public input:not([type="checkbox"]):not([type="radio"]):-webkit-autofill:focus,
+.trackaid-public input:not([type="checkbox"]):not([type="radio"]):-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #111827 !important;
+  caret-color: #111827;
+  transition: background-color 9999s ease-out 0s;
+}
+
+.trackaid-public input::selection,
+.trackaid-public textarea::selection {
+  background-color: rgba(91, 75, 138, 0.25);
+  color: #111827;
 }

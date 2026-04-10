@@ -18,7 +18,7 @@ export function Hero() {
           </p>
           <Link
             to="/registro"
-            className="inline-block mt-8 px-8 py-4 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors"
+            className="inline-block mt-8 px-8 py-4 bg-primary text-white rounded-full font-semibold hover:bg-primary-dark transition-colors"
           >
             Registrarse
           </Link>

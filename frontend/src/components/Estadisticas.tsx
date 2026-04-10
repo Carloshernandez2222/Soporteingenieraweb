@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+
 const STATS = [
   {
     value: "2,245,341",
@@ -37,9 +39,56 @@ const STATS = [
   },
 ];
 
+function parseNumeric(value: string): number {
+  return Number(value.replace(/[^\d]/g, "")) || 0;
+}
+
+function formatThousands(value: number): string {
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
 export function Estadisticas() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [counts, setCounts] = useState<number[]>(() => STATS.map(() => 0));
+  const targets = useMemo(() => STATS.map((s) => parseNumeric(s.value)), []);
+
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.25 }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible) return;
+    const durationMs = 1400;
+    const start = performance.now();
+    let raf = 0;
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / durationMs, 1);
+      // Ease-out para que termine suave.
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCounts(targets.map((t) => Math.round(t * eased)));
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [isVisible, targets]);
+
   return (
-    <section className="py-16 md:py-24">
+    <section ref={sectionRef} className="py-16 md:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div>
@@ -59,13 +108,15 @@ export function Estadisticas() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-6">
-            {STATS.map(({ value, label, icon }) => (
+            {STATS.map(({ label, icon }, idx) => (
               <div
                 key={label}
                 className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm"
               >
                 <div className="text-primary mb-3">{icon}</div>
-                <p className="text-2xl font-bold text-gray-850">{value}</p>
+                <p className="text-2xl font-bold text-gray-850">
+                  {formatThousands(counts[idx] ?? 0)}
+                </p>
                 <p className="text-sm text-gray-600 mt-1">{label}</p>
               </div>
             ))}

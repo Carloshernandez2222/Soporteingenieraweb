@@ -2,6 +2,8 @@
  * Cliente TrackAid (FastAPI auth). En dev, rutas relativas /api/* pasan por el proxy de Vite.
  */
 
+import type { RolUsuario } from "./roles";
+
 const getBaseUrl = () =>
   (import.meta.env.VITE_TRACKAID_API_URL as string | undefined)?.replace(/\/$/, "") ?? "";
 
@@ -63,6 +65,8 @@ export interface UserResponse {
   nombre: string;
   apellidos: string;
   email: string;
+  /** `webmaster` | `soporte` | `usuario` — en SQLite; actualizado al volver a iniciar sesión. */
+  rol: RolUsuario;
 }
 
 export interface RegisterResponse {

@@ -16,7 +16,17 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
+        /** Plus Jakarta Sans: moderna, cercana; encaja con marca joven sin perder legibilidad */
+        sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"],
+      },
+      keyframes: {
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
+      },
+      animation: {
+        marquee: "marquee 45s linear infinite",
       },
     },
   },

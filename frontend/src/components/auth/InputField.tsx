@@ -51,9 +51,11 @@ export function InputField({
           autoComplete={autoComplete}
           onChange={onChange}
           className={`
-            w-full px-4 py-3 rounded-lg border border-gray-300 bg-white
-            text-gray-850 placeholder-gray-400
-            focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
+            w-full px-4 py-3 rounded-lg border border-gray-300
+            bg-white text-gray-900 placeholder-gray-500
+            focus:outline-none focus:ring-2 focus:ring-primary/35 focus:border-primary
+            focus:bg-white focus:text-gray-900
+            disabled:bg-gray-50 disabled:text-gray-500
             transition-colors
             ${isPassword ? "pr-12" : ""}
             ${error ? "border-red-500" : ""}

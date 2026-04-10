@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { fetchJson, mensajeError } from "../../api";
+import { useAuth } from "@/context/AuthContext";
+import { mostrarDetalleApi } from "@/lib/panelApiHints";
 import { IconClipboard } from "../../components/Icons";
 import PageHeader from "../../components/PageHeader";
 import Spinner from "../../components/Spinner";
@@ -22,7 +24,9 @@ function TableSkeleton() {
 }
 
 export default function TallerLista() {
-  useDocumentTitle("Listado temporal");
+  useDocumentTitle("Listado taller");
+  const { user } = useAuth();
+  const verApi = mostrarDetalleApi(user?.rol);
   const [rows, setRows] = useState<CasoTemporal[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [load, setLoad] = useState(true);
@@ -50,8 +54,8 @@ export default function TallerLista() {
     <>
       <PageHeader
         icon={<IconClipboard size={26} />}
-        title="Casos en memoria"
-        subtitle="Vista tabular de todos los registros temporales. Pulse «Actualizar» tras crear o modificar datos en otra pestaña."
+        title="Casos del taller (SQLite)"
+        subtitle="Vista tabular de todos los casos persistidos. Pulse «Actualizar» tras crear o modificar datos en otra pestaña."
         meta={
           <button type="button" className="btn secondary" onClick={() => void cargar()} disabled={load}>
             {load ? (
@@ -66,9 +70,11 @@ export default function TallerLista() {
         }
       />
       <div className="card animate-in">
-        <p className="hint" style={{ marginTop: 0 }}>
-          <code>GET /casos/todos</code>
-        </p>
+        {verApi && (
+          <p className="hint" style={{ marginTop: 0 }}>
+            <code>GET /casos/todos</code>
+          </p>
+        )}
         {err && (
           <div className="feedback show err" role="alert">
             {err}
@@ -92,7 +98,7 @@ export default function TallerLista() {
                   <tr>
                     <td colSpan={5}>
                       <div className="empty-state" style={{ padding: "1.25rem" }}>
-                        No hay registros en la lista temporal.
+                        No hay registros en la base del taller.
                       </div>
                     </td>
                   </tr>

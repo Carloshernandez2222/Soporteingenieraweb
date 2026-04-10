@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { AuthLogo } from "./AuthLogo";
 import { InputField } from "./InputField";
 import { CheckboxWithLinks } from "./CheckboxWithLinks";
@@ -8,6 +9,7 @@ import { register as apiRegister } from "@/lib/trackaidApi";
 
 export function SignUpForm() {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
   const [nombre, setNombre] = useState("");
   const [apellidos, setApellidos] = useState("");
   const [email, setEmail] = useState("");
@@ -17,11 +19,13 @@ export function SignUpForm() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [globalError, setGlobalError] = useState("");
+  const [sugerirLogin, setSugerirLogin] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrors({});
     setGlobalError("");
+    setSugerirLogin(false);
     setLoading(true);
     const { data, error } = await apiRegister({
       nombre: nombre.trim(),
@@ -33,24 +37,45 @@ export function SignUpForm() {
     });
     setLoading(false);
     if (error) {
-      if (error.details && Object.keys(error.details).length > 0) {
+      if (error.code === "EMAIL_IN_USE") {
+        setGlobalError(error.message);
+        setSugerirLogin(true);
+      } else if (error.details && Object.keys(error.details).length > 0) {
         setErrors(error.details);
       } else {
         setGlobalError(error.message);
       }
       return;
     }
-    if (data?.success) {
-      navigate("/iniciar-sesion");
+    if (data?.success && data.user) {
+      setUser(data.user);
+      navigate("/panel", { replace: true });
     }
   }
 
   return (
-    <div className="w-full max-w-md mx-auto flex flex-col items-center">
+    <div className="w-full max-w-md mx-auto flex flex-col items-stretch">
+      <Link
+        to="/"
+        className="self-start text-sm font-medium text-teal-600 hover:text-teal-700 mb-6"
+      >
+        regresar
+      </Link>
+      <div className="flex flex-col items-center w-full">
       <AuthLogo />
       <form onSubmit={handleSubmit} className="w-full mt-8 space-y-4">
         {globalError && (
-          <p className="text-sm text-red-500 bg-red-50 p-3 rounded-lg">{globalError}</p>
+          <div className="text-sm bg-red-50 p-3 rounded-lg space-y-2">
+            <p className="text-red-600">{globalError}</p>
+            {sugerirLogin && (
+              <p className="text-gray-700">
+                <Link to="/iniciar-sesion" className="text-teal-600 hover:text-teal-700 font-medium">
+                  Inicia sesión aquí
+                </Link>{" "}
+                con esa cuenta.
+              </p>
+            )}
+          </div>
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <InputField
@@ -82,7 +107,11 @@ export function SignUpForm() {
           placeholder="Correo electrónico"
           value={email}
           error={errors.email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setSugerirLogin(false);
+            setGlobalError("");
+          }}
           required
         />
         <InputField
@@ -122,19 +151,22 @@ export function SignUpForm() {
           {loading ? "Creando cuenta..." : "Crear cuenta"}
         </button>
       </form>
-      <div className="mt-6 w-full">
-        <p className="text-center text-sm text-gray-500 mb-4">o regístrate con</p>
-        <SocialLoginButtons />
-      </div>
-      <p className="mt-6 text-sm text-gray-600">
+
+      <p className="mt-6 text-sm text-gray-600 text-center">
         ¿Ya tienes cuenta?{" "}
         <Link to="/iniciar-sesion" className="text-teal-600 hover:text-teal-700 font-medium">
           Iniciar sesión
         </Link>
       </p>
+
+      <div className="mt-6 w-full">
+        <p className="text-center text-sm text-gray-500 mb-4">o regístrate con</p>
+        <SocialLoginButtons />
+      </div>
       <p className="mt-8 text-xs text-gray-400">
         © 2024 TrackAid. Todos los derechos reservados.
       </p>
+      </div>
     </div>
   );
 }

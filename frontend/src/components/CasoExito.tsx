@@ -1,33 +1,131 @@
+import { useMemo, useState } from "react";
+
 const LOGROS = [
   "Reducir en un 32% las cancelaciones evitables",
   "Disminuir en un 41% los reclamos post-venta",
   "Mejorar en un 27% los tiempos de resolución",
 ];
 
+type EstadoTicket = "todos" | "en_proceso" | "resuelto";
+
+type Ticket = {
+  id: string;
+  cliente: string;
+  prioridad: "Alta" | "Media" | "Baja";
+  estado: Exclude<EstadoTicket, "todos">;
+};
+
+const TICKETS: Ticket[] = [
+  { id: "#2041", cliente: "Homecenter", prioridad: "Alta", estado: "en_proceso" },
+  { id: "#2043", cliente: "Shopify", prioridad: "Media", estado: "resuelto" },
+  { id: "#2044", cliente: "Amazon", prioridad: "Alta", estado: "en_proceso" },
+  { id: "#2047", cliente: "Mercado Libre", prioridad: "Baja", estado: "resuelto" },
+  { id: "#2050", cliente: "AliExpress", prioridad: "Media", estado: "resuelto" },
+  { id: "#2052", cliente: "Temu", prioridad: "Alta", estado: "en_proceso" },
+  { id: "#2055", cliente: "Ripley", prioridad: "Media", estado: "resuelto" },
+  { id: "#2058", cliente: "Falabella", prioridad: "Baja", estado: "resuelto" },
+];
+
 export function CasoExito() {
+  const [filtro, setFiltro] = useState<EstadoTicket>("todos");
+  const filtrados = useMemo(
+    () => (filtro === "todos" ? TICKETS : TICKETS.filter((t) => t.estado === filtro)),
+    [filtro]
+  );
+  const activos = TICKETS.filter((t) => t.estado !== "resuelto").length;
+  const resueltos = TICKETS.filter((t) => t.estado === "resuelto").length;
+  const filasVisibles = 6;
+  const vacias = Math.max(0, filasVisibles - filtrados.length);
+
   return (
     <section id="servicios" className="py-16 md:py-24 bg-gray-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="flex justify-center lg:justify-start order-2 lg:order-1">
-            <div className="w-full max-w-md aspect-square bg-gradient-to-br from-primary/30 to-primary/10 rounded-2xl flex items-center justify-center">
-              <div className="flex gap-4 p-8">
-                <div className="w-24 h-40 bg-white/90 rounded-xl shadow-lg border border-gray-200 flex flex-col items-center justify-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/30" />
-                  <div className="w-12 h-1.5 bg-gray-300 rounded" />
-                  <div className="w-8 h-8 rounded bg-primary/20" />
+            <div className="w-full max-w-xl rounded-2xl bg-white shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-850">Mini dashboard de tickets</h3>
+                <span className="text-xs text-gray-500">Vista de operación</span>
+              </div>
+
+              <div className="p-5">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl border border-gray-200 p-3 bg-white">
+                    <p className="text-xs text-gray-500">Tickets activos</p>
+                    <p className="text-xl font-bold text-gray-850">{activos}</p>
+                  </div>
+                  <div className="rounded-xl border border-gray-200 p-3 bg-white">
+                    <p className="text-xs text-gray-500">Resueltas / estabilizadas</p>
+                    <p className="text-xl font-bold text-gray-850">{resueltos}</p>
+                  </div>
                 </div>
-                <div className="w-24 h-40 bg-white/90 rounded-xl shadow-lg border border-gray-200 flex flex-col items-center justify-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-primary/30" />
-                  <div className="w-12 h-1.5 bg-gray-300 rounded" />
-                  <div className="w-8 h-8 rounded bg-primary/20" />
+
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {[
+                    ["todos", "Todos"],
+                    ["en_proceso", "En proceso"],
+                    ["resuelto", "Resuelto"],
+                  ].map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setFiltro(key as EstadoTicket)}
+                      className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                        filtro === key
+                          ? "bg-primary text-white border-primary"
+                          : "bg-white text-gray-700 border-gray-300 hover:border-primary/40"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mt-4 rounded-xl border border-gray-200 overflow-hidden min-h-[290px]">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 text-gray-500 text-xs">
+                      <tr>
+                        <th className="text-left px-3 py-2 font-medium">Ticket</th>
+                        <th className="text-left px-3 py-2 font-medium">Cliente</th>
+                        <th className="text-left px-3 py-2 font-medium">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtrados.map((t) => (
+                        <tr key={t.id} className="border-t border-gray-100">
+                          <td className="px-3 py-2 font-semibold text-gray-850">{t.id}</td>
+                          <td className="px-3 py-2 text-gray-700">{t.cliente}</td>
+                          <td className="px-3 py-2">
+                            <span
+                              className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                t.estado === "resuelto"
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-amber-50 text-amber-700"
+                              }`}
+                            >
+                              {t.estado === "en_proceso"
+                                ? "En proceso"
+                                : "Resuelto"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                      {Array.from({ length: vacias }).map((_, idx) => (
+                        <tr key={`empty-${idx}`} className="border-t border-gray-100">
+                          <td className="px-3 py-2 text-transparent select-none">#0000</td>
+                          <td className="px-3 py-2 text-transparent select-none">Placeholder</td>
+                          <td className="px-3 py-2 text-transparent select-none">Estado</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
           </div>
           <div className="order-1 lg:order-2">
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-850 leading-tight">
-              De incidencias invisibles a control operativo real
+              De tickets invisibles a control operativo real
             </h2>
             <p className="mt-6 text-gray-600">
               Una marca de eCommerce en crecimiento enfrentaba cancelaciones
@@ -49,12 +147,6 @@ export function CasoExito() {
               Al obtener visibilidad operativa, transformó el soporte en
               prevención y protegió ingresos ya generados.
             </p>
-            <a
-              href="#aprende-mas"
-              className="inline-block mt-8 px-8 py-4 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-colors"
-            >
-              Aprende más
-            </a>
           </div>
         </div>
       </div>

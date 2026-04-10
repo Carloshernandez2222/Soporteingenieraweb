@@ -7,7 +7,7 @@ export function CTA() {
         </h2>
         <a
           href="#demo"
-          className="inline-block mt-10 px-10 py-4 bg-primary text-white rounded-lg font-semibold text-lg hover:bg-primary-dark transition-colors"
+          className="inline-block mt-10 px-10 py-4 bg-primary text-white rounded-full font-semibold text-lg hover:bg-primary-dark transition-colors"
         >
           Tener una demo
         </a>

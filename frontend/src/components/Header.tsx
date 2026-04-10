@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const NAV_LINKS = [
   { href: "#home", label: "Home" },
@@ -10,6 +11,9 @@ const NAV_LINKS = [
 ];
 
 export function Header() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -37,18 +41,41 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link
-              to="/iniciar-sesion"
-              className="px-4 py-2 text-gray-850 hover:text-primary font-medium text-sm transition-colors"
-            >
-              Iniciar sesión
-            </Link>
-            <Link
-              to="/registro"
-              className="px-5 py-2.5 bg-primary text-white rounded-lg font-medium text-sm hover:bg-primary-dark transition-colors"
-            >
-              Registrarse
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  to="/panel"
+                  className="px-4 py-2 text-gray-850 hover:text-primary font-medium text-sm transition-colors"
+                >
+                  Panel
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    navigate("/", { replace: true });
+                  }}
+                  className="px-5 py-2.5 border border-gray-300 text-gray-850 rounded-full font-medium text-sm hover:bg-gray-50 transition-colors"
+                >
+                  Salir
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/iniciar-sesion"
+                  className="px-4 py-2 text-gray-850 hover:text-primary font-medium text-sm transition-colors"
+                >
+                  Iniciar sesión
+                </Link>
+                <Link
+                  to="/registro"
+                  className="px-5 py-2.5 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary-dark transition-colors"
+                >
+                  Registrarse
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

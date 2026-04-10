@@ -1,5 +1,7 @@
 import { FormEvent, useState } from "react";
 import { fetchJson, mensajeError } from "../../api";
+import { useAuth } from "@/context/AuthContext";
+import { mostrarDetalleApi } from "@/lib/panelApiHints";
 import { IconClipboard } from "../../components/Icons";
 import PageHeader from "../../components/PageHeader";
 import Spinner from "../../components/Spinner";
@@ -7,7 +9,9 @@ import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import type { CasoTemporal } from "../../types";
 
 export default function TallerCrear() {
-  useDocumentTitle("Crear caso temporal");
+  useDocumentTitle("Crear caso taller");
+  const { user } = useAuth();
+  const verApi = mostrarDetalleApi(user?.rol);
   const [loading, setLoading] = useState(false);
   const [fb, setFb] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
 
@@ -34,7 +38,7 @@ export default function TallerCrear() {
       });
       setFb({
         kind: "ok",
-        text: `Registro creado en memoria: id ${res.data.id}, cliente «${res.data.cliente}», categoría «${res.data.categoria}».`,
+        text: `Registro guardado en SQLite (taller): id ${res.data.id}, cliente «${res.data.cliente}», categoría «${res.data.categoria}».`,
       });
       form.reset();
     } catch (err) {
@@ -48,12 +52,14 @@ export default function TallerCrear() {
     <>
       <PageHeader
         icon={<IconClipboard size={26} />}
-        title="Alta de caso temporal"
-        subtitle="Para pruebas del taller: los datos viven solo en memoria y se pierden al reiniciar el servidor."
+        title="Alta de caso (taller)"
+        subtitle="Persistido en SQLite (tabla casos_taller). El id debe ser único."
         meta={
-          <span className="badge ok" style={{ fontSize: "0.72rem" }}>
-            POST /casos/crear
-          </span>
+          verApi ? (
+            <span className="badge ok" style={{ fontSize: "0.72rem" }}>
+              POST /casos/crear
+            </span>
+          ) : undefined
         }
       />
       <div className="card animate-in">
@@ -97,7 +103,7 @@ export default function TallerCrear() {
                 Guardando…
               </>
             ) : (
-              "Registrar en memoria"
+              "Guardar en base de datos"
             )}
           </button>
         </form>

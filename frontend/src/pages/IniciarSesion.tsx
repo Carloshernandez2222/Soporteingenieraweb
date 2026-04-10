@@ -1,8 +1,13 @@
+import { Navigate } from "react-router-dom";
 import { LoginForm, SignUpVisualPanel } from "@/components/auth";
+import { useAuth } from "@/context/AuthContext";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export default function IniciarSesion() {
   useDocumentTitle("Iniciar sesión - TrackAid");
+  const { user } = useAuth();
+  if (user) return <Navigate to="/panel" replace />;
+
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       <section
