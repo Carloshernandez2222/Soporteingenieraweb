@@ -1,16 +1,16 @@
 import { FormEvent, useState } from "react";
-import { fetchJson, mensajeError } from "../api";
-import { IconCheck, IconTicket } from "../components/Icons";
-import PageHeader from "../components/PageHeader";
-import Spinner from "../components/Spinner";
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import type { RegistroOk } from "../types";
+import { fetchJson, mensajeError } from "../../api";
+import { IconCheck, IconTicket } from "../../components/Icons";
+import PageHeader from "../../components/PageHeader";
+import Spinner from "../../components/Spinner";
+import { useDocumentTitle } from "../../hooks/useDocumentTitle";
+import type { RegistroOk } from "../../types";
 
 const NOMBRE_PATTERN = "^[A-Za-zÁÉÍÓÚÜáéíóúüÑñ\\s'.-]+$";
 const MAX_NOMBRE = 120;
 const MAX_DESC = 4000;
 
-export default function Registro() {
+export default function NuevoTicket() {
   useDocumentTitle("Nuevo ticket");
   const [loading, setLoading] = useState(false);
   const [fb, setFb] = useState<{ kind: "ok" | "err"; text: string } | null>(null);

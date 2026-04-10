@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { fetchJson, mensajeError } from "../api";
-import JsonBlock from "../components/JsonBlock";
-import { IconSearch } from "../components/Icons";
-import PageHeader from "../components/PageHeader";
-import Spinner from "../components/Spinner";
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import type { CasoSqlite, CasoTemporal } from "../types";
+import { fetchJson, mensajeError } from "../../api";
+import JsonBlock from "../../components/JsonBlock";
+import { IconSearch } from "../../components/Icons";
+import PageHeader from "../../components/PageHeader";
+import Spinner from "../../components/Spinner";
+import { useDocumentTitle } from "../../hooks/useDocumentTitle";
+import type { CasoSqlite, CasoTemporal } from "../../types";
 
 export default function Consultar() {
   useDocumentTitle("Consultas");

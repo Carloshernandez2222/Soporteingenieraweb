@@ -1,10 +1,10 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { IconClipboard, IconHealth, IconSearch, IconTicket } from "./components/Icons";
+import { IconClipboard, IconHealth, IconSearch, IconTicket } from "@/components/Icons";
 
 const navCls = ({ isActive }: { isActive: boolean }) =>
   `nav-link${isActive ? " active" : ""}`;
 
-export default function Layout() {
+export default function DashboardLayout() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -20,8 +20,14 @@ export default function Layout() {
 
         <nav aria-label="Principal">
           <div className="nav-section">
+            <div className="nav-label">Público</div>
+            <NavLink to="/" className={navCls}>
+              TrackAid (landing)
+            </NavLink>
+          </div>
+          <div className="nav-section">
             <div className="nav-label">Operación</div>
-            <NavLink to="/" end className={navCls}>
+            <NavLink to="/panel/nuevo-ticket" end className={navCls}>
               <IconTicket size={18} />
               Nuevo ticket
             </NavLink>
@@ -59,8 +65,8 @@ export default function Layout() {
         </nav>
 
         <footer className="sidebar-footer">
-          Conexión al backend en el mismo origen en producción. En desarrollo, Vite reenvía las peticiones al
-          puerto 8000.
+          Panel interno. En desarrollo, Vite reenvía <code>/registrar</code>, <code>/casos</code> y{" "}
+          <code>/api</code> al puerto 8000.
         </footer>
       </aside>
 

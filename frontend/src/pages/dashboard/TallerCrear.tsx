@@ -1,10 +1,10 @@
 import { FormEvent, useState } from "react";
-import { fetchJson, mensajeError } from "../api";
-import { IconClipboard } from "../components/Icons";
-import PageHeader from "../components/PageHeader";
-import Spinner from "../components/Spinner";
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
-import type { CasoTemporal } from "../types";
+import { fetchJson, mensajeError } from "../../api";
+import { IconClipboard } from "../../components/Icons";
+import PageHeader from "../../components/PageHeader";
+import Spinner from "../../components/Spinner";
+import { useDocumentTitle } from "../../hooks/useDocumentTitle";
+import type { CasoTemporal } from "../../types";
 
 export default function TallerCrear() {
   useDocumentTitle("Crear caso temporal");

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { fetchJson, mensajeError } from "../api";
-import { IconHealth } from "../components/Icons";
-import PageHeader from "../components/PageHeader";
-import { useDocumentTitle } from "../hooks/useDocumentTitle";
+import { fetchJson, mensajeError } from "../../api";
+import { IconHealth } from "../../components/Icons";
+import PageHeader from "../../components/PageHeader";
+import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 
 export default function Salud() {
   useDocumentTitle("Estado del API");
