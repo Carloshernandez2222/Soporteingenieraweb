@@ -127,6 +127,15 @@ def test_openapi_no_roto_por_spa(client):
     assert client.get("/openapi.json").status_code == 200
 
 
+def test_health_incluye_estado_frontend(client):
+    r = client.get("/health")
+    assert r.status_code == 200
+    j = r.json()
+    assert j["status"] == "ok"
+    assert "frontend_index" in j and isinstance(j["frontend_index"], bool)
+    assert "frontend_assets" in j and isinstance(j["frontend_assets"], bool)
+
+
 def test_rate_limit_registrar(client):
     reiniciar_limites_para_tests()
     for i in range(15):

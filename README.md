@@ -50,7 +50,7 @@ Así Oryx ejecuta ese comando **al final del build de despliegue** (no en cada a
 
 Si `POST_BUILD_COMMAND` no se aplicara en su plan, use **`POST_BUILD_SCRIPT_PATH`** apuntando al script del repo (ruta típica en el sitio: `/home/site/wwwroot/scripts/azure-frontend-build.sh`) y asegúrese de que el archivo sea ejecutable (`chmod +x`).
 
-**Opción B:** `startup.sh` intenta ejecutar `npm ci && npm run build` en `frontend/` si falta `dist` y **npm está en PATH** (suele ocurrir si definió `WEBSITE_NODE_DEFAULT_VERSION`). Para desactivar ese intento: `SKIP_FRONTEND_BUILD=1`.
+**Opción B (solo si no usa Azure o controla el tiempo de arranque):** variable `RUN_FRONTEND_BUILD_ON_START=1` hace que `startup.sh` ejecute `npm ci && npm run build` si falta `dist`. **En App Service suele provocar 503** por tiempo de inicio; prefiera la opción A. `SKIP_FRONTEND_BUILD=1` evita cualquier build en arranque.
 
 **Opción C:** en su PC, antes de crear el paquete de despliegue:
 
@@ -87,7 +87,7 @@ Incluya la carpeta **`frontend/dist`** en el zip que sube a App Service (aunque 
 
 ### Comprobación
 
-- `GET /health` → `{"status":"ok"}`
+- `GET /health` → `{"status":"ok","frontend_index":true,"frontend_assets":true}` (si algún `frontend_*` es `false`, faltó `npm run build` en el servidor o el despliegue no incluye `frontend/dist`).
 - Documentación: `/docs` (solo si el build del front existe o la ruta no cae en la SPA según orden de rutas; en la práctica `/docs` y `/openapi.json` los expone FastAPI antes del fallback SPA).
 
 ## Tests

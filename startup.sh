@@ -16,24 +16,24 @@ if [ -z "${DATABASE_PATH:-}" ] && [ -d "/home/site" ]; then
   export DATABASE_PATH="/home/site/data/soporte.db"
 fi
 
-# La SPA se sirve desde frontend/dist (no va en git). Si falta, intentar compilar si hay Node/npm.
+# La SPA se sirve desde frontend/dist (no va en git).
+# Por defecto NO compilamos en el arranque: en Azure suele superar el tiempo de inicio y el balanceador
+# devuelve 503 aunque la app sea correcta. Use POST_BUILD_COMMAND en despliegue (ver README).
+# Para forzar build al iniciar (p. ej. contenedor propio): RUN_FRONTEND_BUILD_ON_START=1
 FRONT_INDEX="frontend/dist/index.html"
-if [ ! -f "$FRONT_INDEX" ] && [ "${SKIP_FRONTEND_BUILD:-0}" != "1" ]; then
+if [ ! -f "$FRONT_INDEX" ] && [ "${RUN_FRONTEND_BUILD_ON_START:-0}" = "1" ] && [ "${SKIP_FRONTEND_BUILD:-0}" != "1" ]; then
   echo "=========================================="
-  echo "No se encontró $FRONT_INDEX (Vite no está construido)."
+  echo "RUN_FRONTEND_BUILD_ON_START=1: no se encontró $FRONT_INDEX; compilando con npm..."
   if command -v npm >/dev/null 2>&1 && [ -f "frontend/package.json" ]; then
-    echo "Compilando frontend con npm (puede tardar la primera vez)..."
     (cd frontend && npm ci --no-audit --no-fund && npm run build) || {
-      echo "ERROR: npm run build falló. Revise logs o construya en CI y despliegue con dist/."
-      echo "Opciones: en Azure defina WEBSITE_NODE_DEFAULT_VERSION y POST_BUILD_COMMAND (ver README)."
+      echo "ERROR: npm run build falló."
     }
   else
-    echo "ERROR: npm no está en PATH. En App Service (stack Python) añada:"
-    echo "  WEBSITE_NODE_DEFAULT_VERSION = ~20"
-    echo "  POST_BUILD_COMMAND = cd frontend && npm ci && npm run build"
-    echo "O ejecute localmente: cd frontend && npm ci && npm run build y suba el zip con frontend/dist."
+    echo "ERROR: npm no está en PATH."
   fi
   echo "=========================================="
+elif [ ! -f "$FRONT_INDEX" ]; then
+  echo "ADVERTENCIA: falta $FRONT_INDEX — defina POST_BUILD_COMMAND en Azure o RUN_FRONTEND_BUILD_ON_START=1 (ver README)."
 fi
 
 echo "=========================================="

@@ -9,20 +9,29 @@ export default function Salud() {
   const [ok, setOk] = useState<boolean | null>(null);
   const [raw, setRaw] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [frontendBuildMissing, setFrontendBuildMissing] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const data = await fetchJson<{ status: string }>("/health");
+        const data = await fetchJson<{
+          status: string;
+          frontend_index?: boolean;
+          frontend_assets?: boolean;
+        }>("/health");
         if (!cancelled) {
           setOk(data.status === "ok");
           setRaw(JSON.stringify(data, null, 2));
+          setFrontendBuildMissing(
+            data.frontend_index === false || data.frontend_assets === false,
+          );
         }
       } catch (e) {
         if (!cancelled) {
           setOk(false);
           setErr(mensajeError(e));
+          setFrontendBuildMissing(false);
         }
       }
     })();
@@ -71,6 +80,13 @@ export default function Salud() {
           </div>
         )}
         {raw && <pre className="json" style={{ marginTop: "1rem" }}>{raw}</pre>}
+        {frontendBuildMissing && (
+          <div className="feedback show err" role="alert" style={{ marginTop: "1rem" }}>
+            El API está vivo pero falta el build del frontend en el servidor (Vite). En Azure configure{" "}
+            <code>POST_BUILD_COMMAND</code> y <code>WEBSITE_NODE_DEFAULT_VERSION</code> (ver README del repo) o despliegue
+            con <code>frontend/dist</code> generado.
+          </div>
+        )}
         {err && (
           <div className="feedback show err" role="alert" style={{ marginTop: "1rem" }}>
             {err}

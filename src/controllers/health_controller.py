@@ -3,7 +3,7 @@ import os
 from fastapi import APIRouter
 from fastapi.responses import FileResponse, JSONResponse
 
-from ..config_paths import FRONTEND_INDEX
+from ..config_paths import FRONTEND_ASSETS_DIR, FRONTEND_INDEX
 
 router = APIRouter(tags=["raíz"])
 
@@ -23,4 +23,11 @@ async def read_index():
 
 @router.get("/health", summary="Salud del servicio")
 def health_check():
-    return {"status": "ok"}
+    """Incluye si existe el build de Vite (diagnóstico de 503 en / o /assets)."""
+    index_ok = os.path.isfile(FRONTEND_INDEX)
+    assets_ok = os.path.isdir(FRONTEND_ASSETS_DIR)
+    return {
+        "status": "ok",
+        "frontend_index": index_ok,
+        "frontend_assets": assets_ok,
+    }
