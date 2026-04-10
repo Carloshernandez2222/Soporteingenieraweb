@@ -129,7 +129,7 @@ Si prefiere seguir usando **Run From Package** (`WEBSITE_RUN_FROM_PACKAGE=1`), n
 
 ### Comprobación
 
-- `GET /health` → `{"status":"ok","frontend_index":true,"frontend_assets":true}` (si algún `frontend_*` es `false`, faltó `npm run build` en el servidor o el despliegue no incluye `frontend/dist`).
+- `GET /health` → incluye `frontend_index`, `frontend_assets`, `frontend_images` (si alguno es `false`, falta build o carpeta `dist/images` desde `public/images`).
 - Documentación: `/docs` (solo si el build del front existe o la ruta no cae en la SPA según orden de rutas; en la práctica `/docs` y `/openapi.json` los expone FastAPI antes del fallback SPA).
 
 ## Tests

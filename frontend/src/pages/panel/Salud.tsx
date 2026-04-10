@@ -19,12 +19,15 @@ export default function Salud() {
           status: string;
           frontend_index?: boolean;
           frontend_assets?: boolean;
+          frontend_images?: boolean;
         }>("/health");
         if (!cancelled) {
           setOk(data.status === "ok");
           setRaw(JSON.stringify(data, null, 2));
           setFrontendBuildMissing(
-            data.frontend_index === false || data.frontend_assets === false,
+            data.frontend_index === false ||
+              data.frontend_assets === false ||
+              data.frontend_images === false,
           );
         }
       } catch (e) {
