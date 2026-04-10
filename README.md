@@ -85,6 +85,33 @@ Incluya la carpeta **`frontend/dist`** en el zip que sube a App Service (aunque 
 
 6. **HTTPS**: App Service termina TLS; la app escucha HTTP internamente en `PORT`.
 
+### `az webapp up` devuelve 409 (zip deployment)
+
+Ese código suele indicar **conflicto con el modo de despliegue** o **otro deploy en curso**.
+
+1. **Quitar ejecución desde paquete remoto** (incompatible con el zip que sube `az webapp up`):
+
+   ```bash
+   az webapp config appsettings delete \
+     --name mi-app-fastapi-mateo-v1 \
+     --resource-group mi-app-fastapi-mateo-v1-rg \
+     --setting-names WEBSITE_RUN_FROM_PACKAGE
+   ```
+
+   Si existía **`WEBSITE_RUN_FROM_ZIP`**, elimínela del mismo modo. Liste todo con:
+
+   ```bash
+   az webapp config appsettings list \
+     --name mi-app-fastapi-mateo-v1 \
+     --resource-group mi-app-fastapi-mateo-v1-rg -o table
+   ```
+
+2. **Esperar** a que termine un despliegue anterior (portal → **Deployment Center** / Kudu → **Deployments**) o revise el estado en la URL que muestra el CLI.
+
+3. Vuelva a ejecutar `az webapp up ...`.
+
+Si prefiere seguir usando **Run From Package** (`WEBSITE_RUN_FROM_PACKAGE=1`), no use `az webapp up` con zip: despliegue el `.zip` por otra vía (p. ej. `az webapp deployment source config-zip`) y deje coherente la documentación de Microsoft para ese flujo.
+
 ### Comprobación
 
 - `GET /health` → `{"status":"ok","frontend_index":true,"frontend_assets":true}` (si algún `frontend_*` es `false`, faltó `npm run build` en el servidor o el despliegue no incluye `frontend/dist`).
