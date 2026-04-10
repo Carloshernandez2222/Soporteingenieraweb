@@ -35,7 +35,34 @@ cd frontend && npm install && npm run dev
 
 Ya tienes referencia en `.azure/config` (grupo, plan, web app). Pasos habituales:
 
-1. **Build del frontend** antes de publicar (los estáticos van a `frontend/dist` y el backend los sirve bajo `/` y `/assets`):
+### Si ves `Frontend no construido` en el navegador
+
+Eso significa que en el servidor **no existe** `frontend/dist/index.html`. Esa carpeta **no se sube con git** (está ignorada); hay que generarla en el despliegue o en tu máquina antes del zip.
+
+**Opción A (recomendada en Azure):** en **Configuration → Application settings** añada:
+
+| Nombre | Valor |
+|--------|--------|
+| `WEBSITE_NODE_DEFAULT_VERSION` | `~20` |
+| `POST_BUILD_COMMAND` | `cd frontend && npm ci && npm run build` |
+
+Así Oryx ejecuta ese comando **al final del build de despliegue** (no en cada arranque) y genera `frontend/dist`. Vuelva a desplegar desde Git tras guardar.
+
+Si `POST_BUILD_COMMAND` no se aplicara en su plan, use **`POST_BUILD_SCRIPT_PATH`** apuntando al script del repo (ruta típica en el sitio: `/home/site/wwwroot/scripts/azure-frontend-build.sh`) y asegúrese de que el archivo sea ejecutable (`chmod +x`).
+
+**Opción B:** `startup.sh` intenta ejecutar `npm ci && npm run build` en `frontend/` si falta `dist` y **npm está en PATH** (suele ocurrir si definió `WEBSITE_NODE_DEFAULT_VERSION`). Para desactivar ese intento: `SKIP_FRONTEND_BUILD=1`.
+
+**Opción C:** en su PC, antes de crear el paquete de despliegue:
+
+```bash
+cd frontend && npm ci && npm run build && cd ..
+```
+
+Incluya la carpeta **`frontend/dist`** en el zip que sube a App Service (aunque no esté en git).
+
+### Checklist de despliegue
+
+1. **Build del frontend** (obligatorio en algún paso del flujo): los estáticos van a `frontend/dist` y el backend los sirve bajo `/` y `/assets`:
    ```bash
    cd frontend && npm ci && npm run build && cd ..
    ```
