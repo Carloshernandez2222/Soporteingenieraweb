@@ -1,8 +1,9 @@
-import { Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { RequireAuth } from "./components/RequireAuth";
 import { RequireRole } from "./components/RequireRole";
 import DashboardLayout from "./layouts/DashboardLayout";
 import IniciarSesion from "./pages/IniciarSesion";
+import DemoChatbot from "./pages/DemoChatbot";
 import Landing from "./pages/Landing";
 import RegistroCuenta from "./pages/RegistroCuenta";
 import Consultar from "./pages/panel/Consultar";
@@ -32,8 +33,10 @@ export default function App() {
     <Routes>
       <Route element={<PublicChrome />}>
         <Route path="/" element={<Landing />} />
+        <Route path="/producto" element={<Navigate to="/#producto" replace />} />
         <Route path="/iniciar-sesion" element={<IniciarSesion />} />
         <Route path="/registro" element={<RegistroCuenta />} />
+        <Route path="/demo" element={<DemoChatbot />} />
       </Route>
 
       <Route element={<RequireAuth />}>

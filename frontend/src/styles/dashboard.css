@@ -802,6 +802,318 @@ pre.json {
   font-size: 0.9rem;
 }
 
+/* Maquetas en landing #producto: marco con altura tipo ventana; sidebar y main con scroll propio */
+.panel-theme.app-shell.product-mock-shell {
+  min-height: 420px;
+  height: min(72vh, 720px);
+  max-height: min(88vh, 820px);
+  overflow: hidden;
+  background-attachment: scroll;
+  align-items: stretch;
+}
+.product-mock-sidebar.sidebar {
+  width: 210px;
+  flex-shrink: 0;
+  align-self: stretch;
+  padding: 0.85rem 0.55rem 0.85rem;
+  min-height: 0;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.product-mock-main.main-area {
+  padding: 0.9rem 0.85rem 1.25rem;
+  max-width: none;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Un solo panel embebido (#producto): un poco más ancho y alto en escritorio */
+.product-mock-embed .product-mock-sidebar.sidebar {
+  width: 232px;
+}
+
+/* Embed landing: solo tema claro, superficies planas y jerarquía clara */
+.product-mock-embed .panel-theme.panel-theme--light.app-shell.product-mock-shell {
+  background: #eceaf3;
+  background-image: none;
+}
+.product-mock-embed .panel-theme.panel-theme--light .product-mock-sidebar.sidebar {
+  background: #ffffff;
+  border-right: 1px solid rgba(91, 75, 138, 0.14);
+  box-shadow: 4px 0 20px rgba(74, 61, 114, 0.05);
+}
+.product-mock-embed .panel-theme.panel-theme--light .product-mock-main.main-area {
+  background: #fbfbfe;
+}
+.product-mock-embed .embed-sidebar-user {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0 0.35rem;
+}
+.product-mock-embed .embed-sidebar-label {
+  margin: 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #8a8498;
+}
+.product-mock-embed .embed-sidebar-email {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #3d3556;
+  word-break: break-all;
+}
+.product-mock-embed .embed-user-badge {
+  align-self: flex-start;
+  margin: 0.15rem 0 0.35rem;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  background: rgba(91, 75, 138, 0.1) !important;
+  color: #4a3d72 !important;
+  border: 1px solid rgba(91, 75, 138, 0.22) !important;
+}
+.product-mock-embed .embed-signout-btn {
+  width: 100%;
+  margin-top: 0.15rem;
+  font-size: 0.82rem !important;
+  padding: 0.5rem 0.75rem !important;
+  box-shadow: none !important;
+  border: 1px solid rgba(91, 75, 138, 0.18) !important;
+  background: #faf9fc !important;
+  color: #5c556b !important;
+  opacity: 1 !important;
+}
+.product-mock-embed .embed-nav {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.product-mock-embed .embed-nav .nav-label {
+  color: #6b6580;
+  padding-top: 0.65rem;
+}
+.product-mock-embed .panel-theme.panel-theme--light .embed-nav .nav-link {
+  border-radius: 10px;
+  color: #4d4663;
+}
+.product-mock-embed .panel-theme.panel-theme--light .embed-nav .nav-link:hover {
+  background: #f3f0fa;
+  color: #3d3556;
+}
+.product-mock-embed .panel-theme.panel-theme--light .embed-nav .nav-link.active {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #5b4b8a 0%, #6f5f9c 100%) !important;
+  border: none !important;
+  box-shadow: 0 3px 12px rgba(91, 75, 138, 0.28);
+}
+.product-mock-embed .panel-theme.panel-theme--light .embed-nav .nav-link.active svg {
+  opacity: 1;
+  color: inherit;
+}
+.product-mock-embed .embed-panel-footnote {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(91, 75, 138, 0.1);
+  font-size: 0.7rem;
+  line-height: 1.45;
+  color: #9a94a8;
+}
+.product-mock-embed .embed-page-header {
+  margin-bottom: 1.25rem;
+}
+.product-mock-embed .embed-page-header .page-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #2d2d2d;
+}
+.product-mock-embed .embed-page-header .page-subtitle {
+  font-size: 0.94rem;
+  color: #5c556b;
+  line-height: 1.5;
+}
+.product-mock-embed .embed-cards-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .product-mock-embed .embed-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .product-mock-embed .embed-cards-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.product-mock-embed .embed-panel-card {
+  background: #ffffff;
+  border: 1px solid rgba(91, 75, 138, 0.12);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 2px 10px rgba(45, 45, 45, 0.04);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  margin-bottom: 0;
+}
+.product-mock-embed .embed-panel-card:hover {
+  border-color: rgba(91, 75, 138, 0.22);
+  box-shadow: 0 6px 20px rgba(74, 61, 114, 0.07);
+}
+.product-mock-embed .embed-panel-hint {
+  margin: 0 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7b6ba8;
+}
+.product-mock-embed .embed-card-title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #2d2d2d;
+}
+.product-mock-embed .embed-card-desc {
+  margin: 0.45rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #6b6580;
+}
+
+/* Vista previa del formulario «Crear ticket» (sin inputs reales) */
+.product-mock-embed .embed-form-section {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(91, 75, 138, 0.12);
+}
+.product-mock-embed .embed-form-section-head {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+.product-mock-embed .embed-form-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(91, 75, 138, 0.1);
+  color: #5b4b8a;
+  border: 1px solid rgba(91, 75, 138, 0.15);
+}
+.product-mock-embed .embed-form-section-title {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: #2d2d2d;
+  letter-spacing: -0.02em;
+}
+.product-mock-embed .embed-form-mock {
+  background: #ffffff;
+  border: 1px solid rgba(91, 75, 138, 0.12);
+  border-radius: 14px;
+  padding: 1.15rem 1.2rem 1.25rem;
+  box-shadow: 0 2px 10px rgba(45, 45, 45, 0.04);
+}
+.product-mock-embed .embed-mock-field {
+  margin-bottom: 1.1rem;
+}
+.product-mock-embed .embed-mock-field:last-of-type {
+  margin-bottom: 1rem;
+}
+.product-mock-embed .embed-mock-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b6580;
+  margin-bottom: 0.4rem;
+}
+.product-mock-embed .embed-mock-input,
+.product-mock-embed .embed-mock-textarea {
+  display: block;
+  width: 100%;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #3d3556;
+  background: #f6f5f9;
+  border: 1px solid rgba(91, 75, 138, 0.14);
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  user-select: none;
+}
+.product-mock-embed .embed-mock-textarea {
+  min-height: 5.5rem;
+  white-space: pre-wrap;
+}
+.product-mock-embed .embed-mock-hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  color: #8a8498;
+  line-height: 1.4;
+}
+.product-mock-embed .embed-mock-meta {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  color: #9a94a8;
+  text-align: right;
+}
+.product-mock-embed .embed-mock-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.15rem;
+  padding: 0.62rem 1.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #ffffff;
+  background: linear-gradient(135deg, #a89fc4 0%, #9a90b8 100%);
+  border-radius: 10px;
+  opacity: 0.85;
+  cursor: default;
+  box-shadow: none;
+}
+
+@media (min-width: 1024px) {
+  .product-mock-embed .panel-theme.app-shell.product-mock-shell {
+    height: min(76vh, 780px);
+    max-height: min(90vh, 860px);
+  }
+}
+
+@media (max-width: 860px) {
+  .panel-theme.app-shell.product-mock-shell {
+    flex-direction: row;
+  }
+  .product-mock-shell .product-mock-sidebar.sidebar {
+    width: 200px;
+    border-bottom: none;
+    border-right: 1px solid var(--border);
+  }
+  .product-mock-embed .product-mock-sidebar.sidebar {
+    width: 200px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
