@@ -1,62 +1,38 @@
-# Entornos virtuales 
+# ========================
+# ARCHIVOS DE PYTHON
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 
-venv/ 
-
+# Entornos virtuales
+venv/
+env/
 .venv/
 
-env/ 
-
-ENV/ 
-
-.env 
-
-frontend/node_modules/
-frontend/dist/
-*.tsbuildinfo
-
- 
-
-# Python 
-
-__pycache__/ 
-
-*.pyc 
-
-*.pyo 
-
-*.pyd 
-
-.Python 
-
- 
-
-# IDE 
-
-.vscode/ 
-
-.idea/ 
-
- 
-
-# Archivos locales 
-
-*.log 
-
-.DS_Store 
-
-# SQLite local de desarrollo
-
-local.db
+# ========================
+# BASES DE DATOS
+# ========================
+*.sqlite3
 *.db
+soporte.db
+/home/site/data/
 
- 
+# ========================
+# FRONTEND (Node.js)
+# ========================
+node_modules/
+frontend/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
 
-# Azure 
-
-bin/ 
-
-obj/ 
-
-deploy.zip 
-
+# ========================
+# AZURE Y ARTEFACTOS
+# ========================
+.azure/
+*.zip
 azure-deploy.zip
+deploy.zip
