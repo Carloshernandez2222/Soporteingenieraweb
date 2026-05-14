@@ -46,4 +46,4 @@ else
 fi
 echo "=========================================="
 
-exec gunicorn -w "${WORKERS}" -k uvicorn.workers.UvicornWorker conection:test --bind "0.0.0.0:${PORT}"
+exec gunicorn -w "${WORKERS}" -k uvicorn.workers.UvicornWorker Backend.conection:test --bind "0.0.0.0:${PORT}"
