@@ -3,6 +3,8 @@ export { Hero } from "./Hero";
 export { PotencialesClientes } from "./PotencialesClientes";
 export { IdealParaEmpresas } from "./IdealParaEmpresas";
 export { CasoExito } from "./CasoExito";
+export { ProductoPreview } from "./ProductoPreview";
+export { Pricing } from "./Pricing";
 export { Estadisticas } from "./Estadisticas";
 export { CTA } from "./CTA";
 export { Footer } from "./Footer";

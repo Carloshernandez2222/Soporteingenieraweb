@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from .config_paths import FRONTEND_ASSETS_DIR
+from .config_paths import FRONTEND_ASSETS_DIR, FRONTEND_IMAGES_DIR
 from .controllers.auth_controller import router as auth_router
 from .controllers.casos_controller import router as casos_router
 from .controllers.health_controller import router as health_router
@@ -79,6 +79,8 @@ def create_app() -> FastAPI:
 
     if os.path.isdir(FRONTEND_ASSETS_DIR):
         app.mount("/assets", StaticFiles(directory=FRONTEND_ASSETS_DIR), name="vite_assets")
+    if os.path.isdir(FRONTEND_IMAGES_DIR):
+        app.mount("/images", StaticFiles(directory=FRONTEND_IMAGES_DIR), name="vite_images")
 
     app.add_middleware(
         CORSMiddleware,

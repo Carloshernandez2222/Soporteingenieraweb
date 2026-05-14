@@ -4,6 +4,8 @@ import {
   PotencialesClientes,
   IdealParaEmpresas,
   CasoExito,
+  ProductoPreview,
+  Pricing,
   Estadisticas,
   Footer,
 } from "@/components";
@@ -18,6 +20,8 @@ export default function Landing() {
       <PotencialesClientes />
       <IdealParaEmpresas />
       <CasoExito />
+      <ProductoPreview />
+      <Pricing />
       <Estadisticas />
       <Footer />
     </main>

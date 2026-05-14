@@ -134,6 +134,7 @@ def test_health_incluye_estado_frontend(client):
     assert j["status"] == "ok"
     assert "frontend_index" in j and isinstance(j["frontend_index"], bool)
     assert "frontend_assets" in j and isinstance(j["frontend_assets"], bool)
+    assert "frontend_images" in j and isinstance(j["frontend_images"], bool)
 
 
 def test_rate_limit_registrar(client):

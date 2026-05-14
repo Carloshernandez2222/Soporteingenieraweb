@@ -88,7 +88,11 @@ export function Estadisticas() {
   }, [isVisible, targets]);
 
   return (
-    <section ref={sectionRef} className="py-16 md:py-24">
+    <section
+      ref={sectionRef}
+      id="funcion"
+      className="py-16 md:py-24 scroll-mt-24 md:scroll-mt-28"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div>
