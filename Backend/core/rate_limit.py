@@ -2,7 +2,7 @@ from collections import defaultdict
 from time import time
 
 from .constants import REGISTRAR_RATE_LIMIT_MAX, REGISTRAR_RATE_LIMIT_WINDOW_SEC
-from .exceptions import RateLimitExceededError
+from .core.exceptions import RateLimitExceededError
 
 _hits_por_ip: dict[str, list[float]] = defaultdict(list)
 

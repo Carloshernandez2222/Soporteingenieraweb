@@ -1,7 +1,7 @@
 from email_validator import EmailNotValidError, validate_email
 
 from .constants import MAX_EMAIL_LEN
-from .exceptions import CorreoInvalidoError
+from .core.exceptions import CorreoInvalidoError
 
 
 def validar_y_normalizar_correo(raw: str) -> str:

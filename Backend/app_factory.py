@@ -17,7 +17,7 @@ from .controllers.casos_controller import router as casos_router
 from .controllers.health_controller import router as health_router
 from .controllers.registro_controller import router as registro_router
 from .controllers.spa_controller import router as spa_router
-from .exceptions import (
+from .core.exceptions import (
     CasoNoEncontradoError,
     CorreoInvalidoError,
     IdDuplicadoError,
