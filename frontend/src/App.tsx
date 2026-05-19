@@ -13,7 +13,9 @@ import PanelHome from "./pages/panel/PanelHome";
 import Salud from "./pages/panel/Salud";
 import TallerCrear from "./pages/panel/TallerCrear";
 import TallerFiltrar from "./pages/panel/TallerFiltrar";
+import TallerIntegracion from "./pages/panel/TallerIntegracion";
 import TallerLista from "./pages/panel/TallerLista";
+import TallerMetricas from "./pages/panel/TallerMetricas";
 import TicketsGenerales from "./pages/panel/TicketsGenerales";
 
 /** Contenedor visual común de la zona pública (solo Tailwind). */
@@ -59,6 +61,8 @@ export default function App() {
           <Route element={<RequireRole allow={["soporte"]} />}>
             <Route path="/taller/lista" element={<TallerLista />} />
             <Route path="/taller/filtrar" element={<TallerFiltrar />} />
+            <Route path="/taller/integracion" element={<TallerIntegracion />} />
+            <Route path="/taller/metricas" element={<TallerMetricas />} />
           </Route>
 
           <Route element={<RequireRole allow={["webmaster"]} />}>

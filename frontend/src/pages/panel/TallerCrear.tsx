@@ -1,13 +1,12 @@
 import { FormEvent, useState } from "react";
-import { fetchJson, mensajeError } from "../../api";
+import { mensajeError } from "../../api";
+import { crearCasoTaller, type PlantillaTaller } from "@/lib/panelPatronesApi";
 import { useAuth } from "@/context/AuthContext";
 import { mostrarDetalleApi } from "@/lib/panelApiHints";
 import { IconClipboard } from "../../components/Icons";
 import PageHeader from "../../components/PageHeader";
 import Spinner from "../../components/Spinner";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
-import type { CasoTemporal } from "../../types";
-
 export default function TallerCrear() {
   useDocumentTitle("Crear caso taller");
   const { user } = useAuth();
@@ -22,20 +21,18 @@ export default function TallerCrear() {
     const fd = new FormData(form);
     const id = Number(fd.get("id"));
     const prioridad = Number(fd.get("prioridad"));
+    const plantilla = String(fd.get("plantilla") ?? "default") as PlantillaTaller;
     const body = {
       id: Number.isFinite(id) ? id : 0,
       cliente: String(fd.get("cliente") ?? "").trim(),
       activo: fd.get("activo") === "on",
       prioridad: Number.isFinite(prioridad) ? prioridad : 0,
       categoria: String(fd.get("categoria") ?? "").trim(),
+      plantilla,
     };
     setLoading(true);
     try {
-      const res = await fetchJson<{ status: string; data: CasoTemporal }>("/casos/crear", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      const res = await crearCasoTaller(body);
       setFb({
         kind: "ok",
         text: `Registro guardado en SQLite (taller): id ${res.data.id}, cliente «${res.data.cliente}», categoría «${res.data.categoria}».`,
@@ -53,7 +50,7 @@ export default function TallerCrear() {
       <PageHeader
         icon={<IconClipboard size={26} />}
         title="Alta de caso (taller)"
-        subtitle="Persistido en SQLite (tabla casos_taller). El id debe ser único."
+        subtitle="Prototype: elige plantilla e-commerce (default, Amazon, Shopify) y ajusta los datos. El id debe ser único."
         meta={
           verApi ? (
             <span className="badge ok" style={{ fontSize: "0.72rem" }}>
@@ -82,6 +79,15 @@ export default function TallerCrear() {
                 defaultValue={3}
               />
             </div>
+          </div>
+          <div className="field">
+            <label htmlFor="plantilla">Plantilla (Prototype)</label>
+            <select id="plantilla" name="plantilla" defaultValue="default">
+              <option value="default">Genérica</option>
+              <option value="amazon">Amazon</option>
+              <option value="shopify">Shopify</option>
+            </select>
+            <p className="hint">Valores por defecto de categoría y prioridad según la tienda.</p>
           </div>
           <div className="field">
             <label htmlFor="cliente">Cliente</label>

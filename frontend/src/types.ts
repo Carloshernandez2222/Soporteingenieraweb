@@ -23,3 +23,13 @@ export type RegistroOk = {
   msg: string;
   caso_id: number;
 };
+
+export type MetricasJerarquicas = {
+  total_casos: number;
+  prioridad_promedio_global: number;
+  tiendas: Array<{
+    nombre: string;
+    total_casos: number;
+    prioridad_promedio: number;
+  }>;
+};

@@ -1,6 +1,8 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { mensajeError } from "@/api";
 import { Footer, Header } from "@/components";
+import { registrarCasoStrategy } from "@/lib/panelPatronesApi";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 type Msg = { id: string; role: "user" | "bot"; text: string };
@@ -9,23 +11,31 @@ function botReply(text: string): string {
   const t = text.toLowerCase().trim();
   if (!t) return "Escribe algo y te respondo con una pista.";
   if (/hola|buen(os|as)\s|hey|hi\b/.test(t)) {
-    return "¡Hola! Soy un asistente de demostración de TrackAid. Puedes preguntarme por tickets, registro o precios, o usa los accesos rápidos de abajo.";
-  }
-  if (/ticket|incidencia|registr(ar|o)|caso|problema/.test(t)) {
-    return "Para registrar una incidencia de verdad, crea una cuenta y entra al panel: **Nuevo ticket** con tu nombre, correo y descripción. Aquí solo simulo respuestas.";
+    return "¡Hola! Soy el asistente de demostración de TrackAid. Puedes registrar un ticket real escribiendo tu problema con correo (Strategy + Observer en el servidor).";
   }
   if (/precio|plan|costo|pagar/.test(t)) {
-    return "En la web tienes la sección de precios en el menú. Los planes dependen de tu operación; esta demo no muestra importes reales.";
+    return "En la web tienes la sección de precios en el menú. Los planes dependen de tu operación.";
   }
   if (/trackaid|qu[eé]\s+es|para\s+qu[eé]/.test(t)) {
-    return "TrackAid ayuda a dar seguimiento a incidencias en operaciones (por ejemplo eCommerce): menos pérdidas por fallas logísticas o de integración.";
+    return "TrackAid ayuda a dar seguimiento a incidencias en operaciones eCommerce.";
   }
-  if (/gracias|thanks/.test(t)) return "De nada. Si necesitas soporte humano, usa el registro y el panel cuando esté disponible para tu equipo.";
-  if (/adi[oó]s|chao|bye/.test(t)) return "Hasta luego. Puedes volver cuando quieras a probar esta demo.";
-  return "No tengo una respuesta fija para eso en esta demo. Prueba con «ticket», «precios» o «qué es TrackAid», o elige un acceso rápido.";
+  if (/gracias|thanks/.test(t)) return "De nada.";
+  if (/adi[oó]s|chao|bye/.test(t)) return "Hasta luego.";
+  return "Para un ticket real, incluye tu correo y describe el problema. Ejemplo: «Me llamo Ana. Correo ana@test.com. Falla de red en el pedido.»";
 }
 
-const QUICK = ["¿Qué es TrackAid?", "¿Cómo abro un ticket?", "Precios"] as const;
+function pareceSolicitudTicket(text: string): boolean {
+  return /@/.test(text) && /(ticket|incidencia|problema|falla|error|pedido|registr)/i.test(text);
+}
+
+const QUICK = [
+  "¿Qué es TrackAid?",
+  "Registrar ticket de prueba",
+  "¿Cómo abro un ticket?",
+] as const;
+
+const EJEMPLO_TICKET =
+  "Me llamo Ana Demo. Correo ana.demo@ejemplo.com. Problema de software en la integración del pedido.";
 
 let idSeq = 0;
 function nextId() {
@@ -39,7 +49,7 @@ export default function DemoChatbot() {
     {
       id: "welcome",
       role: "bot",
-      text: "Hola, soy el asistente de **demostración** de TrackAid. Las respuestas son fijas; sirven para ver cómo podría verse un chat en el producto.",
+      text: "Hola. Esta demo usa **Strategy (chatbot)** en el backend: si describes un problema con tu correo, intento crear un ticket real en SQLite.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -59,16 +69,43 @@ export default function DemoChatbot() {
     setMessages((prev) => [...prev, { id: nextId(), role: "bot", text }]);
   }
 
+  async function responderUsuario(text: string) {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    if (trimmed === "Registrar ticket de prueba") {
+      await intentarRegistro(EJEMPLO_TICKET);
+      return;
+    }
+
+    if (pareceSolicitudTicket(trimmed)) {
+      await intentarRegistro(trimmed);
+      return;
+    }
+
+    pushBot(botReply(trimmed));
+  }
+
+  async function intentarRegistro(mensaje: string) {
+    setPending(true);
+    try {
+      const data = await registrarCasoStrategy({ origen: "chatbot", mensaje });
+      pushBot(
+        `**Ticket #${data.caso_id}** registrado en la base de datos.\n\n${data.message || data.msg}\n\n(Observer: el servidor notificó por log/correo simulado.)`
+      );
+    } catch (e) {
+      pushBot(`No pude registrar el ticket: ${mensajeError(e)}\n\n${botReply(mensaje)}`);
+    } finally {
+      setPending(false);
+    }
+  }
+
   function sendUser(text: string) {
     const trimmed = text.trim();
     if (!trimmed || pending) return;
     setMessages((prev) => [...prev, { id: nextId(), role: "user", text: trimmed }]);
     setInput("");
-    setPending(true);
-    window.setTimeout(() => {
-      pushBot(botReply(trimmed));
-      setPending(false);
-    }, 550);
+    void responderUsuario(trimmed);
   }
 
   function onSubmit(e: FormEvent) {
@@ -84,7 +121,7 @@ export default function DemoChatbot() {
           <div className="mb-4">
             <h1 className="text-2xl font-bold text-gray-850 tracking-tight">Demo del asistente</h1>
             <p className="mt-1 text-sm text-gray-600">
-              Chat de prueba con respuestas automáticas.{" "}
+              Chat con registro real vía <code className="text-xs">POST /registrar?origen=chatbot</code>.{" "}
               <Link to="/" className="text-primary font-medium hover:underline">
                 Volver al inicio
               </Link>
@@ -97,7 +134,6 @@ export default function DemoChatbot() {
               className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3 scroll-smooth"
               role="log"
               aria-live="polite"
-              aria-relevant="additions"
             >
               {messages.map((m) => (
                 <div
@@ -117,19 +153,8 @@ export default function DemoChatbot() {
               ))}
               {pending && (
                 <div className="flex justify-start">
-                  <div className="rounded-2xl rounded-bl-md px-4 py-3 text-sm bg-gray-100 border border-gray-200/80 flex gap-1.5 items-center text-gray-500">
-                    <span className="inline-flex gap-1" aria-hidden>
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary/50 animate-pulse" />
-                      <span
-                        className="w-1.5 h-1.5 rounded-full bg-primary/50 animate-pulse"
-                        style={{ animationDelay: "0.15s" }}
-                      />
-                      <span
-                        className="w-1.5 h-1.5 rounded-full bg-primary/50 animate-pulse"
-                        style={{ animationDelay: "0.3s" }}
-                      />
-                    </span>
-                    Escribiendo…
+                  <div className="rounded-2xl rounded-bl-md px-4 py-3 text-sm bg-gray-100 border border-gray-200/80 text-gray-500">
+                    Procesando…
                   </div>
                 </div>
               )}
@@ -151,21 +176,21 @@ export default function DemoChatbot() {
               </div>
               <form onSubmit={onSubmit} className="flex gap-2 items-end">
                 <label htmlFor="demo-chat-input" className="sr-only">
-                  Mensaje para el asistente
+                  Mensaje
                 </label>
                 <input
                   id="demo-chat-input"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Escribe un mensaje…"
+                  placeholder="Describe el problema con tu correo…"
                   disabled={pending}
-                  className="flex-1 min-w-0 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-850 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary/40"
+                  className="flex-1 min-w-0 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm"
                   autoComplete="off"
                 />
                 <button
                   type="submit"
                   disabled={pending || !input.trim()}
-                  className="shrink-0 rounded-xl bg-primary text-white px-5 py-2.5 text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-45 disabled:pointer-events-none"
+                  className="shrink-0 rounded-xl bg-primary text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-45"
                 >
                   Enviar
                 </button>
@@ -179,7 +204,6 @@ export default function DemoChatbot() {
   );
 }
 
-/** Markdown mínimo **negrita** solo en burbujas del bot. */
 function MsgBody({ text, isUser }: { text: string; isUser: boolean }) {
   if (isUser) return <p className="whitespace-pre-wrap break-words m-0">{text}</p>;
   const parts = text.split(/(\*\*[^*]+\*\*)/g);

@@ -48,6 +48,11 @@ class CasoSoporte(BaseModel):
         description="Categoría del incidente (p. ej. red, software, hardware).",
         examples=["red"],
     )
+    plantilla: str | None = Field(
+        default=None,
+        max_length=32,
+        description="Prototype: default | amazon | shopify",
+    )
 
     @field_validator("cliente")
     @classmethod

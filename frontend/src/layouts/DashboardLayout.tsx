@@ -175,6 +175,14 @@ export default function DashboardLayout() {
                   <IconSearch size={18} />
                   Por categoría
                 </NavLink>
+                <NavLink to="/taller/integracion" className={navCls}>
+                  <IconClipboard size={18} />
+                  Integración e-commerce
+                </NavLink>
+                <NavLink to="/taller/metricas" className={navCls}>
+                  <IconClipboard size={18} />
+                  Métricas (Composite)
+                </NavLink>
               </div>
             </>
           )}

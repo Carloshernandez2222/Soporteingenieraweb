@@ -29,7 +29,7 @@ def obtener_todos():
 )
 def crear_caso_temporal(caso: CasoSoporte):
     nuevo_registro = caso.model_dump()
-    nuevo_registro.setdefault("plantilla", "default")
+    nuevo_registro["plantilla"] = (caso.plantilla or "default").lower()
     data = get_servicio_taller().crear(nuevo_registro)
     return {"status": "success", "data": data}
 

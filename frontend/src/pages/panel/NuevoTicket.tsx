@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
-import { fetchJson, mensajeError } from "../../api";
+import { mensajeError } from "../../api";
+import { registrarCasoStrategy } from "@/lib/panelPatronesApi";
 import { useAuth } from "@/context/AuthContext";
 import { mostrarDetalleApi } from "@/lib/panelApiHints";
 import { normalizarRol } from "@/lib/roles";
@@ -7,8 +8,6 @@ import { IconCheck, IconTicket } from "../../components/Icons";
 import PageHeader from "../../components/PageHeader";
 import Spinner from "../../components/Spinner";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
-import type { RegistroOk } from "../../types";
-
 const NOMBRE_PATTERN = "^[A-Za-zÁÉÍÓÚÜáéíóúüÑñ\\s'.-]+$";
 const MAX_NOMBRE = 120;
 const MAX_DESC = 4000;
@@ -40,8 +39,13 @@ export default function NuevoTicket() {
     });
     setLoading(true);
     try {
-      const data = await fetchJson<RegistroOk>(`/registrar?${params}`, {
-        method: "POST",
+      const data = await registrarCasoStrategy({
+        origen: "web",
+        nombre: params.get("nombre") ?? "",
+        email: params.get("email") ?? "",
+        descripcion: params.get("descripcion") ?? "",
+        categoria: params.get("categoria") ?? "general",
+        creado_por_rol: params.get("creado_por_rol") ?? "usuario",
       });
       setFb({ kind: "ok", text: data.message || data.msg });
       form.reset();
@@ -59,11 +63,11 @@ export default function NuevoTicket() {
       <PageHeader
         icon={<IconTicket size={26} />}
         title="Registrar incidencia"
-        subtitle="Abre un ticket en la base de datos. Los datos se validan en el servidor: nombre sin dígitos, correo normalizado y límites de longitud."
+        subtitle="Abre un ticket en la base de datos (Strategy: formulario web). Los datos se validan en el servidor: nombre sin dígitos, correo normalizado y límites de longitud."
         meta={
           verApi ? (
             <span className="badge ok" style={{ fontSize: "0.72rem" }}>
-              POST /registrar
+              POST /registrar?origen=web
             </span>
           ) : undefined
         }
