@@ -1,11 +1,12 @@
-from typing import Optional
+from typing import Any, Optional
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Body, HTTPException, Query
 
 from ..constants import MAX_EMAIL_LEN, MAX_NOMBRE_LEN
 from ..dependencies import get_servicio_soporte, get_servicio_taller
-from ..exceptions import CasoNoEncontradoError, TicketSqliteNoEncontradoError
+from ..core.exceptions import CasoNoEncontradoError, TicketSqliteNoEncontradoError
 from ..models import CasoSoporte
+from ..patterns.adapter import obtener_adaptador
 
 router = APIRouter()
 
@@ -28,8 +29,42 @@ def obtener_todos():
 )
 def crear_caso_temporal(caso: CasoSoporte):
     nuevo_registro = caso.model_dump()
+    nuevo_registro.setdefault("plantilla", "default")
     data = get_servicio_taller().crear(nuevo_registro)
     return {"status": "success", "data": data}
+
+
+@router.post(
+    "/casos/integracion",
+    tags=["casos-temporales"],
+    summary="Crear caso desde e-commerce externo (Adapter)",
+    description=(
+        "Recibe payloads de Amazon o Shopify y los adapta al modelo interno "
+        "antes de persistir en el taller."
+    ),
+)
+def crear_caso_integracion(
+    payload: dict[str, Any] = Body(...),
+    origen: str = Query(..., description="Proveedor: amazon | shopify"),
+):
+    adaptador = obtener_adaptador(origen)
+    if adaptador is None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Origen '{origen}' no soportado. Use amazon o shopify.",
+        )
+    registro = adaptador.traducir_payload(payload)
+    data = get_servicio_taller().crear(registro)
+    return {"status": "success", "origen": origen.lower(), "data": data}
+
+
+@router.get(
+    "/casos/metricas-jerarquicas",
+    tags=["casos-temporales"],
+    summary="Métricas por tienda y global (Composite)",
+)
+def metricas_jerarquicas():
+    return {"status": "success", "data": get_servicio_taller().metricas_jerarquicas()}
 
 
 @router.get(

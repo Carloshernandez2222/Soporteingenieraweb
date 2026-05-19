@@ -6,8 +6,9 @@ import time
 from ..config_paths import DEFAULT_SQLITE_PATH
 from ..constants import MAX_DESCRIPCION_LEN, MAX_NOMBRE_LEN
 from ..constants import normalizar_rol
-from ..email_utils import validar_y_normalizar_correo
-from ..exceptions import CorreoInvalidoError, IssueInvalidoError, NombreInvalidoError
+from ..utils.email_utils import validar_y_normalizar_correo
+from ..core.exceptions import CorreoInvalidoError, IssueInvalidoError, NombreInvalidoError
+from ..patterns.observer import IObservador, ObservadorEmail, ObservadorLogs
 
 
 class ServicioSoporte:
@@ -15,6 +16,7 @@ class ServicioSoporte:
 
     def __init__(self, db_path: str | None = None):
         self.db_path = db_path or os.environ.get("DATABASE_PATH") or DEFAULT_SQLITE_PATH
+        self._observadores: list[IObservador] = [ObservadorLogs(), ObservadorEmail()]
         parent = os.path.dirname(self.db_path)
         if parent and not os.path.isdir(parent):
             try:
@@ -63,6 +65,17 @@ class ServicioSoporte:
             """
         )
         conn.commit()
+
+    def suscribir(self, observador: IObservador) -> None:
+        self._observadores.append(observador)
+
+    def desuscribir(self, observador: IObservador) -> None:
+        if observador in self._observadores:
+            self._observadores.remove(observador)
+
+    def notificar(self, evento: str, datos: dict) -> None:
+        for obs in self._observadores:
+            obs.actualizar(evento, datos)
 
     def registrar_caso(
         self,
@@ -115,6 +128,17 @@ class ServicioSoporte:
         caso_id = cursor.lastrowid
         conn.commit()
         conn.close()
+
+        self.notificar(
+            "CASO_CREADO",
+            {
+                "caso_id": caso_id,
+                "nombre": nombre_limpio,
+                "email": email_norm,
+                "categoria": categoria_limpia,
+                "creado_por_rol": rol_norm,
+            },
+        )
 
         texto = f"Caso registrado para {nombre_limpio} en la base de datos (ticket #{caso_id})."
         return {

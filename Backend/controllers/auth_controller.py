@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from ..dependencies import get_servicio_auth
-from ..exceptions import CorreoInvalidoError
+from ..core.exceptions import CorreoInvalidoError
 from ..models import ForgotPasswordBody, LoginBody, RegisterBody, ResetPasswordBody
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])

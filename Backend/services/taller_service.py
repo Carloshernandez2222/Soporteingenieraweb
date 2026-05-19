@@ -8,12 +8,15 @@ import time
 from typing import Any
 
 from ..config_paths import DEFAULT_SQLITE_PATH
-from ..exceptions import IdDuplicadoError
+from ..core.exceptions import IdDuplicadoError
+from ..patterns.composite import CasoHoja, TiendaComposite
+from ..patterns.prototype import GestorPlantillas
 
 
 class ServicioTaller:
     def __init__(self, db_path: str | None = None):
         self.db_path = db_path or os.environ.get("DATABASE_PATH") or DEFAULT_SQLITE_PATH
+        self.gestor = GestorPlantillas()
         parent = os.path.dirname(self.db_path)
         if parent and not os.path.isdir(parent):
             try:
@@ -83,12 +86,16 @@ class ServicioTaller:
         return out
 
     def crear(self, registro: dict[str, Any]) -> dict[str, Any]:
+        llave_plantilla = str(registro.get("plantilla") or "default")
+        clon = self.gestor.obtener_clon(llave_plantilla)
+        clon.actualizar_datos(registro)
+        base = clon.to_registro()
         nuevo = {
-            "id": int(registro["id"]),
-            "cliente": registro["cliente"],
-            "activo": 1 if registro["activo"] else 0,
-            "prioridad": float(registro["prioridad"]),
-            "categoria": registro["categoria"],
+            "id": int(base["id"]),
+            "cliente": base["cliente"],
+            "activo": 1 if base["activo"] else 0,
+            "prioridad": float(base["prioridad"]),
+            "categoria": base["categoria"],
             "created_at": time.time(),
         }
         conn = self._connect()
@@ -154,3 +161,30 @@ class ServicioTaller:
         out = [self._row_to_dict(r) for r in cur.fetchall()]
         conn.close()
         return out
+
+    def metricas_jerarquicas(self) -> dict[str, Any]:
+        """Composite: agrupa casos por cliente (tienda) y calcula métricas globales."""
+        casos = self.listar_todos()
+        raiz = TiendaComposite("TrackAid Global")
+        tiendas: dict[str, TiendaComposite] = {}
+
+        for registro in casos:
+            cliente = str(registro["cliente"])
+            if cliente not in tiendas:
+                nodo = TiendaComposite(cliente)
+                tiendas[cliente] = nodo
+                raiz.agregar(nodo)
+            tiendas[cliente].agregar(CasoHoja.from_dict(registro))
+
+        return {
+            "total_casos": raiz.obtener_total_casos(),
+            "prioridad_promedio_global": raiz.obtener_prioridad_promedio(),
+            "tiendas": [
+                {
+                    "nombre": t.nombre,
+                    "total_casos": t.obtener_total_casos(),
+                    "prioridad_promedio": t.obtener_prioridad_promedio(),
+                }
+                for t in tiendas.values()
+            ],
+        }

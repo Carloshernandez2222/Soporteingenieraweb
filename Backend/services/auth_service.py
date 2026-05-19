@@ -9,7 +9,7 @@ from typing import Any
 
 from ..config_paths import DEFAULT_SQLITE_PATH
 from ..constants import ROL_DEFECTO, normalizar_rol
-from ..email_utils import validar_y_normalizar_correo
+from ..utils.email_utils import validar_y_normalizar_correo
 
 RESET_TOKENS: dict[str, tuple[str, float]] = {}
 RESET_TTL_SEC = 3600
