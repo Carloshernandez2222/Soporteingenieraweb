@@ -1,58 +1,60 @@
 import { FormEvent, useState } from "react";
-import { mensajeError } from "../../api";
-import { registrarCasoStrategy } from "@/lib/panelPatronesApi";
 import { useAuth } from "@/context/AuthContext";
 import { mostrarDetalleApi } from "@/lib/panelApiHints";
-import { normalizarRol } from "@/lib/roles";
+import { registrarCasoStrategy } from "@/lib/panelPatronesApi";
 import { IconCheck, IconTicket } from "../../components/Icons";
 import PageHeader from "../../components/PageHeader";
 import Spinner from "../../components/Spinner";
-import { useDocumentTitle } from "../../hooks/useDocumentTitle";
-const NOMBRE_PATTERN = "^[A-Za-zÁÉÍÓÚÜáéíóúüÑñ\\s'.-]+$";
-const MAX_NOMBRE = 120;
+import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 const MAX_DESC = 4000;
 
 export default function NuevoTicket() {
   useDocumentTitle("Nuevo ticket");
   const { user } = useAuth();
   const verApi = mostrarDetalleApi(user?.rol);
+  
   const [loading, setLoading] = useState(false);
   const [fb, setFb] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
-  const [nombreLen, setNombreLen] = useState(0);
   const [descLen, setDescLen] = useState(0);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFb(null);
-    const form = e.currentTarget;
-    if (!form.checkValidity()) {
-      form.reportValidity();
+
+    if (!user?.id) {
+      setFb({ kind: "err", text: "Error de autenticación: No se encontró el ID de usuario." });
       return;
     }
-    const fd = new FormData(form);
-    const params = new URLSearchParams({
-      nombre: String(fd.get("nombre") ?? "").trim(),
-      email: String(fd.get("email") ?? "").trim(),
-      descripcion: String(fd.get("descripcion") ?? "").trim(),
-      categoria: "general",
-      creado_por_rol: normalizarRol(user?.rol),
-    });
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const descripcion = String(formData.get("descripcion") ?? "").trim();
+
+    if (!descripcion) {
+      setFb({ kind: "err", text: "La descripción no puede estar vacía." });
+      return;
+    }
+
     setLoading(true);
+
     try {
-      const data = await registrarCasoStrategy({
-        origen: "web",
-        nombre: params.get("nombre") ?? "",
-        email: params.get("email") ?? "",
-        descripcion: params.get("descripcion") ?? "",
-        categoria: params.get("categoria") ?? "general",
-        creado_por_rol: params.get("creado_por_rol") ?? "usuario",
-      });
-      setFb({ kind: "ok", text: data.message || data.msg });
+      // El payload debe coincidir con el modelo RegistroSoporteBody de tu backend
+      const payload = {
+        user_id: user.id, 
+        descripcion: descripcion,
+        case_type: "General",
+        priority: "Medium"
+      };
+
+      const data = await registrarCasoStrategy(payload);
+      
+      setFb({ kind: "ok", text: data.message || "Ticket registrado exitosamente." });
       form.reset();
-      setNombreLen(0);
       setDescLen(0);
-    } catch (err) {
-      setFb({ kind: "err", text: mensajeError(err) });
+    } catch (err: any) {
+      // Intentamos extraer el mensaje del backend o fallback al error genérico
+      const errorMsg = err?.response?.data?.message || err?.message || "Error al registrar el ticket.";
+      setFb({ kind: "err", text: errorMsg });
     } finally {
       setLoading(false);
     }
@@ -63,83 +65,35 @@ export default function NuevoTicket() {
       <PageHeader
         icon={<IconTicket size={26} />}
         title="Registrar incidencia"
-        subtitle="Abre un ticket en la base de datos (Strategy: formulario web). Los datos se validan en el servidor: nombre sin dígitos, correo normalizado y límites de longitud."
-        meta={
-          verApi ? (
-            <span className="badge ok" style={{ fontSize: "0.72rem" }}>
-              POST /registrar?origen=web
-            </span>
-          ) : undefined
-        }
+        subtitle="Abre un ticket de soporte vinculado a tu cuenta."
+        meta={verApi ? <span className="badge ok">POST /api/casos/soporte</span> : undefined}
       />
 
       <div className="card animate-in" style={{ animationDelay: "0.05s" }}>
         <form onSubmit={onSubmit} noValidate>
-          <div className="field">
-            <label htmlFor="nombre">Solicitante (nombre completo)</label>
-            <input
-              id="nombre"
-              name="nombre"
-              required
-              minLength={1}
-              maxLength={MAX_NOMBRE}
-              pattern={NOMBRE_PATTERN}
-              title="Letras, espacios, apóstrofes y guiones; sin dígitos"
-              autoComplete="name"
-              onChange={(e) => setNombreLen(e.target.value.length)}
-            />
-            <div className={`char-count${nombreLen > MAX_NOMBRE * 0.9 ? " warn" : ""}`}>
-              {nombreLen} / {MAX_NOMBRE}
-            </div>
-          </div>
-          <div className="field">
-            <label htmlFor="email">Correo de contacto</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              maxLength={254}
-              autoComplete="email"
-              placeholder="nombre@organizacion.com"
-              defaultValue={user?.email ?? ""}
-              key={user?.email ?? "sin-correo"}
-            />
-            <p className="hint">Se usará para localizar sus tickets posteriores.</p>
-          </div>
           <div className="field">
             <label htmlFor="descripcion">Descripción del problema</label>
             <textarea
               id="descripcion"
               name="descripcion"
               required
-              minLength={1}
               maxLength={MAX_DESC}
-              placeholder="Síntomas, pasos para reproducir, mensaje de error…"
+              placeholder="Detalle el inconveniente aquí..."
               onChange={(e) => setDescLen(e.target.value.length)}
             />
-            <div className={`char-count${descLen > MAX_DESC * 0.9 ? " warn" : ""}`}>
+            <div className="char-count">
               {descLen} / {MAX_DESC}
             </div>
           </div>
+
           <button type="submit" className="btn" disabled={loading}>
-            {loading ? (
-              <>
-                <Spinner label="Enviando" />
-                Registrando…
-              </>
-            ) : (
-              "Enviar solicitud"
-            )}
+            {loading ? <><Spinner label="Enviando" /> Registrando…</> : "Enviar solicitud"}
           </button>
         </form>
+
         {fb && (
           <div className={`feedback show ${fb.kind === "ok" ? "ok" : "err"}`} role="alert">
-            {fb.kind === "ok" && (
-              <span className="feedback-lead-icon" aria-hidden>
-                <IconCheck size={22} />
-              </span>
-            )}
+            {fb.kind === "ok" && <IconCheck size={22} />}
             <span>{fb.text}</span>
           </div>
         )}

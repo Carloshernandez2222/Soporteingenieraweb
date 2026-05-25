@@ -1,10 +1,9 @@
 /**
- * Cliente API para endpoints del taller (patrones: Adapter, Composite, Strategy).
+ * Cliente API para endpoints del taller y soporte (patrones: Adapter, Composite, Strategy).
  */
 
 import { fetchJson } from "../api";
-import type { CasoTemporal, RegistroOk } from "../types";
-
+import type { CasoTemporal } from "../types";
 export type PlantillaTaller = "default" | "amazon" | "shopify";
 export type OrigenIntegracion = "amazon" | "shopify";
 export type OrigenRegistro = "web" | "chatbot";
@@ -77,21 +76,33 @@ export async function obtenerMetricasJerarquicas() {
   );
 }
 
-export async function registrarCasoStrategy(params: {
-  origen: OrigenRegistro;
-  nombre?: string;
-  email?: string;
-  descripcion?: string;
-  mensaje?: string;
-  categoria?: string;
-  creado_por_rol?: string;
-}) {
-  const q = new URLSearchParams({ origen: params.origen });
-  if (params.nombre) q.set("nombre", params.nombre);
-  if (params.email) q.set("email", params.email);
-  if (params.descripcion) q.set("descripcion", params.descripcion);
-  if (params.mensaje) q.set("mensaje", params.mensaje);
-  if (params.categoria) q.set("categoria", params.categoria);
-  if (params.creado_por_rol) q.set("creado_por_rol", params.creado_por_rol);
-  return fetchJson<RegistroOk>(`/registrar?${q}`, { method: "POST" });
+// Retornamos Promise<any> para evitar conflictos de TypeScript con el Chatbot
+export async function registrarCasoStrategy(payload: any): Promise<any> {
+  // Si tiene user_id, es el flujo del nuevo backend SQL Server
+  if (payload.user_id) {
+    return fetchJson(
+      "/api/casos/soporte", 
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: payload.user_id,
+          descripcion: payload.descripcion,
+          case_type: payload.case_type || "General",
+          priority: payload.priority || "Medium"
+        }),
+      }
+    );
+  }
+
+  // Flujo antiguo para el Taller/Chatbot (SQLite)
+  const q = new URLSearchParams({ origen: payload.origen || "web" });
+  if (payload.nombre) q.set("nombre", payload.nombre);
+  if (payload.email) q.set("email", payload.email);
+  if (payload.descripcion) q.set("descripcion", payload.descripcion);
+  if (payload.mensaje) q.set("mensaje", payload.mensaje);
+  if (payload.categoria) q.set("categoria", payload.categoria);
+  if (payload.creado_por_rol) q.set("creado_por_rol", payload.creado_por_rol);
+  
+  return fetchJson(`/registrar?${q}`, { method: "POST" });
 }

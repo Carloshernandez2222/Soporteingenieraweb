@@ -28,3 +28,8 @@ class CasoNoEncontradoError(Exception):
 class TicketSqliteNoEncontradoError(Exception):
     """No hay fila en SQLite con el id de ticket solicitado."""
     pass
+
+class AuthException(Exception): pass
+class EmailAlreadyExistsError(AuthException): pass  # Reemplaza al error de "ID duplicado" en usuarios
+class UserNotFoundError(AuthException): pass         # Reemplaza al error de "CasoNoEncontrado"
+class InvalidCredentialsError(AuthException): pass   # Específico para login

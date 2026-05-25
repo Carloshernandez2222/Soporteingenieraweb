@@ -1,77 +1,17 @@
-import os
-import re
-import sqlite3
-import time
-
-from ..config_paths import DEFAULT_SQLITE_PATH
-from ..constants import MAX_DESCRIPCION_LEN, MAX_NOMBRE_LEN
-from ..constants import normalizar_rol
-from ..utils.email_utils import validar_y_normalizar_correo
-from ..core.exceptions import CorreoInvalidoError, IssueInvalidoError, NombreInvalidoError
-from ..patterns.observer import IObservador, ObservadorEmail, ObservadorLogs
-
+from __future__ import annotations
+from typing import Any, Optional, List
+from uuid import UUID
+from sqlmodel import Session, select
+from Backend.core.database import engine
+from Backend.models.db_models import SupportCaseDB, OrderDB
+from Backend.core.exceptions import CasoNoEncontradoError
+from Backend.patterns.observer import IObservador, ObservadorEmail, ObservadorLogs
 
 class ServicioSoporte:
-    """Servicio / modelo de negocio: persistencia de tickets en SQLite."""
+    """Servicio de negocio: Persistencia de tickets en SQL Server con SQLModel."""
 
-    def __init__(self, db_path: str | None = None):
-        self.db_path = db_path or os.environ.get("DATABASE_PATH") or DEFAULT_SQLITE_PATH
-        self._observadores: list[IObservador] = [ObservadorLogs(), ObservadorEmail()]
-        parent = os.path.dirname(self.db_path)
-        if parent and not os.path.isdir(parent):
-            try:
-                os.makedirs(parent, exist_ok=True)
-            except OSError:
-                pass
-
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            CREATE TABLE IF NOT EXISTS casos (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                nombre TEXT NOT NULL,
-                email TEXT NOT NULL,
-                descripcion TEXT NOT NULL,
-                categoria TEXT NOT NULL DEFAULT 'general',
-                creado_por_rol TEXT NOT NULL DEFAULT 'usuario',
-                created_at REAL NOT NULL DEFAULT 0
-            )
-            """
-        )
-        conn.commit()
-        self._ensure_columns(conn)
-        conn.close()
-
-    def _ensure_columns(self, conn: sqlite3.Connection) -> None:
-        cur = conn.execute("PRAGMA table_info(casos)")
-        cols = {r[1] for r in cur.fetchall()}
-        if "categoria" not in cols:
-            conn.execute(
-                "ALTER TABLE casos ADD COLUMN categoria TEXT NOT NULL DEFAULT 'general'"
-            )
-        if "creado_por_rol" not in cols:
-            conn.execute(
-                "ALTER TABLE casos ADD COLUMN creado_por_rol TEXT NOT NULL DEFAULT 'usuario'"
-            )
-        if "created_at" not in cols:
-            conn.execute("ALTER TABLE casos ADD COLUMN created_at REAL NOT NULL DEFAULT 0")
-        # Corregir datos antiguos: antes se rellenaba created_at con `id` (no es timestamp Unix).
-        conn.execute(
-            """
-            UPDATE casos
-            SET created_at = 0
-            WHERE created_at > 0 AND created_at < 1000000000
-            """
-        )
-        conn.commit()
-
-    def suscribir(self, observador: IObservador) -> None:
-        self._observadores.append(observador)
-
-    def desuscribir(self, observador: IObservador) -> None:
-        if observador in self._observadores:
-            self._observadores.remove(observador)
+    def __init__(self):
+        self._observadores: List[IObservador] = [ObservadorLogs(), ObservadorEmail()]
 
     def notificar(self, evento: str, datos: dict) -> None:
         for obs in self._observadores:
@@ -79,150 +19,108 @@ class ServicioSoporte:
 
     def registrar_caso(
         self,
-        nombre: str,
-        email: str,
+        user_id: str,
         descripcion: str,
-        categoria: str | None = None,
-        creado_por_rol: str | None = None,
-    ):
-        nombre_limpio = (nombre or "").strip()
-        descripcion_limpia = (descripcion or "").strip()
+        order_id: Optional[str] = None,
+        case_type: str = "General",
+        priority: str = "Medium"
+    ) -> dict[str, Any]:
+        
+        with Session(engine) as session:
+            # 1. Validación de UserID (Obligatorio)
+            try:
+                target_user_id = UUID(user_id)
+            except (ValueError, TypeError):
+                raise ValueError("FORMATO_INVALIDO_USER_ID")
 
-        if not nombre_limpio:
-            raise NombreInvalidoError("El nombre no puede estar vacío.")
-        if len(nombre_limpio) > MAX_NOMBRE_LEN:
-            raise NombreInvalidoError(
-                f"El nombre supera el máximo permitido ({MAX_NOMBRE_LEN} caracteres)."
+            # 2. Validación de OrderID (Solo si viene con datos)
+            target_order_id = None
+            if order_id and order_id.strip():
+                try:
+                    target_order_id = UUID(order_id)
+                except ValueError:
+                    raise ValueError("FORMATO_INVALIDO_ORDER_ID")
+                
+                # Validar existencia real en base de datos
+                order = session.exec(select(OrderDB).where(OrderDB.OrderID == target_order_id)).first()
+                if not order:
+                    raise ValueError("ORDER_NOT_FOUND")
+
+            # 3. Creación del caso (Ahora guarda la descripción)
+            nuevo_caso = SupportCaseDB(
+                UserID=target_user_id,
+                OrderID=target_order_id,
+                Description=descripcion,  # <--- GUARDAMOS LA DESCRIPCIÓN
+                CaseType=case_type,
+                Status="Open",
+                Priority=priority
             )
-        if re.search(r"\d", nombre_limpio):
-            raise NombreInvalidoError("El nombre no puede contener números.")
+            
+            session.add(nuevo_caso)
+            session.commit()
+            session.refresh(nuevo_caso)
 
-        email_norm = validar_y_normalizar_correo(email)
+            # 4. Notificación
+            self.notificar("CASO_CREADO", {"case_id": str(nuevo_caso.CaseID), "type": case_type})
 
-        if not descripcion_limpia:
-            raise IssueInvalidoError("La descripción del issue no puede estar vacía.")
-        if len(descripcion_limpia) > MAX_DESCRIPCION_LEN:
-            raise IssueInvalidoError(
-                f"La descripción supera el máximo permitido ({MAX_DESCRIPCION_LEN} caracteres)."
-            )
-        categoria_limpia = (categoria or "").strip() or "general"
-        rol_norm = normalizar_rol(creado_por_rol)
-        created_at = time.time()
+            return {
+                "status": "success",
+                "case_id": str(nuevo_caso.CaseID),
+                "message": f"Caso #{nuevo_caso.CaseID} registrado exitosamente."
+            }
 
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            INSERT INTO casos (nombre, email, descripcion, categoria, creado_por_rol, created_at)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (
-                nombre_limpio,
-                email_norm,
-                descripcion_limpia,
-                categoria_limpia,
-                rol_norm,
-                created_at,
-            ),
-        )
-        caso_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
+    def listar_todos_casos(self) -> List[dict[str, Any]]:
+        with Session(engine) as session:
+            casos = session.exec(select(SupportCaseDB).order_by(SupportCaseDB.CreatedAt.desc())).all()
+            return [
+                {
+                    "case_id": str(c.CaseID),
+                    "user_id": str(c.UserID),
+                    "type": c.CaseType,
+                    "status": c.Status,
+                    "priority": c.Priority,
+                    "created_at": c.CreatedAt
+                } for c in casos
+            ]
 
-        self.notificar(
-            "CASO_CREADO",
-            {
-                "caso_id": caso_id,
-                "nombre": nombre_limpio,
-                "email": email_norm,
-                "categoria": categoria_limpia,
-                "creado_por_rol": rol_norm,
-            },
-        )
+    # --- NUEVO MÉTODO: Listar casos de un usuario específico ---
+    def listar_casos_usuario(self, user_id: str) -> List[dict[str, Any]]:
+        with Session(engine) as session:
+            try:
+                target_id = UUID(user_id)
+            except (ValueError, TypeError):
+                raise ValueError("FORMATO_INVALIDO_USER_ID")
 
-        texto = f"Caso registrado para {nombre_limpio} en la base de datos (ticket #{caso_id})."
-        return {
-            "status": "success",
-            "message": texto,
-            "msg": texto,
-            "caso_id": caso_id,
-        }
+            # Buscamos solo los tickets que pertenezcan a este usuario
+            casos = session.exec(
+                select(SupportCaseDB)
+                .where(SupportCaseDB.UserID == target_id)
+                .order_by(SupportCaseDB.CreatedAt.desc())
+            ).all()
+            
+            return [
+                {
+                    "case_id": str(c.CaseID),
+                    "type": c.CaseType,
+                    "status": c.Status,
+                    "priority": c.Priority,
+                    "description": getattr(c, 'Description', 'Sin descripción'), # <--- DEVOLVEMOS LA DESCRIPCIÓN
+                    "created_at": c.CreatedAt
+                } for c in casos
+            ]
 
-    def listar_casos_por_email(self, email: str) -> list[dict]:
-        email_norm = validar_y_normalizar_correo(email)
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT id, nombre, email, descripcion, categoria, creado_por_rol, created_at
-            FROM casos
-            WHERE email = ?
-            ORDER BY id DESC
-            """,
-            (email_norm,),
-        )
-        filas = [dict(r) for r in cursor.fetchall()]
-        conn.close()
-        return filas
+    def cerrar_caso(self, case_id: str) -> bool:
+        with Session(engine) as session:
+            try:
+                target_id = UUID(case_id)
+            except (ValueError, TypeError):
+                raise ValueError("FORMATO_INVALIDO_ID")
 
-    def listar_todos_casos(self) -> list[dict]:
-        """Listado global de tickets persistidos (más recientes primero)."""
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT id, nombre, email, descripcion, categoria, creado_por_rol, created_at
-            FROM casos
-            ORDER BY id DESC
-            """
-        )
-        filas = [dict(r) for r in cursor.fetchall()]
-        conn.close()
-        return filas
-
-    def listar_casos_por_email_y_nombre(self, email: str, nombre: str) -> list[dict]:
-        """Tickets SQLite donde coinciden correo (normalizado) y nombre del solicitante (sin distinguir mayúsculas)."""
-        email_norm = validar_y_normalizar_correo(email)
-        nombre_limpio = (nombre or "").strip()
-        if not nombre_limpio:
-            raise NombreInvalidoError("El nombre no puede estar vacío.")
-        if len(nombre_limpio) > MAX_NOMBRE_LEN:
-            raise NombreInvalidoError(
-                f"El nombre supera el máximo permitido ({MAX_NOMBRE_LEN} caracteres)."
-            )
-        if re.search(r"\d", nombre_limpio):
-            raise NombreInvalidoError("El nombre no puede contener números.")
-
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT id, nombre, email, descripcion, categoria, creado_por_rol, created_at
-            FROM casos
-            WHERE email = ? AND LOWER(TRIM(nombre)) = LOWER(?)
-            ORDER BY id DESC
-            """,
-            (email_norm, nombre_limpio),
-        )
-        filas = [dict(r) for r in cursor.fetchall()]
-        conn.close()
-        return filas
-
-    def obtener_caso_sqlite_por_id(self, caso_id: int) -> dict | None:
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            SELECT id, nombre, email, descripcion, categoria, creado_por_rol, created_at
-            FROM casos
-            WHERE id = ?
-            """,
-            (caso_id,),
-        )
-        row = cursor.fetchone()
-        conn.close()
-        return dict(row) if row else None
+            caso = session.exec(select(SupportCaseDB).where(SupportCaseDB.CaseID == target_id)).first()
+            if not caso:
+                raise CasoNoEncontradoError("No existe el caso solicitado.")
+            
+            caso.Status = "Closed"
+            session.add(caso)
+            session.commit()
+            return True

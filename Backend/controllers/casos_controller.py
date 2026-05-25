@@ -1,159 +1,85 @@
 from typing import Any, Optional
-
-from fastapi import APIRouter, Body, HTTPException, Query
-
-from ..constants import MAX_EMAIL_LEN, MAX_NOMBRE_LEN
+from fastapi import APIRouter, Body, HTTPException, Query, status, Depends
+from pydantic import BaseModel
 from ..dependencies import get_servicio_soporte, get_servicio_taller
-from ..core.exceptions import CasoNoEncontradoError, TicketSqliteNoEncontradoError
+from ..core.exceptions import CasoNoEncontradoError
 from ..models import CasoSoporte
 from ..patterns.adapter import obtener_adaptador
 
-router = APIRouter()
+router = APIRouter(prefix="/api/casos", tags=["casos"])
 
+# --- Modelos Pydantic para el Request Body ---
+class RegistroSoporteBody(BaseModel):
+    user_id: str
+    descripcion: str
+    order_id: Optional[str] = None
+    case_type: str = "General"
+    priority: str = "Medium"
 
-@router.get(
-    "/casos/todos",
-    tags=["casos-temporales"],
-    summary="Listar todos los casos del taller",
-    response_description="Lista en SQLite (tabla casos_taller)",
-)
-def obtener_todos():
-    return get_servicio_taller().listar_todos()
+# --- Módulo: Casos del Taller (Temporales) ---
 
+@router.get("/taller", summary="Listar casos del taller")
+def obtener_todos_taller():
+    return {"status": "success", "data": get_servicio_taller().listar_todos()}
 
-@router.post(
-    "/casos/crear",
-    tags=["casos-temporales"],
-    summary="Crear caso del taller",
-    response_description="Caso persistido en SQLite si el id es único",
-)
-def crear_caso_temporal(caso: CasoSoporte):
+@router.post("/taller", summary="Crear caso temporal", status_code=status.HTTP_201_CREATED)
+def crear_caso_taller(caso: CasoSoporte):
     nuevo_registro = caso.model_dump()
     nuevo_registro["plantilla"] = (caso.plantilla or "default").lower()
     data = get_servicio_taller().crear(nuevo_registro)
     return {"status": "success", "data": data}
 
-
-@router.post(
-    "/casos/integracion",
-    tags=["casos-temporales"],
-    summary="Crear caso desde e-commerce externo (Adapter)",
-    description=(
-        "Recibe payloads de Amazon o Shopify y los adapta al modelo interno "
-        "antes de persistir en el taller."
-    ),
-)
+@router.post("/taller/integracion", summary="Crear caso vía e-commerce")
 def crear_caso_integracion(
     payload: dict[str, Any] = Body(...),
     origen: str = Query(..., description="Proveedor: amazon | shopify"),
 ):
     adaptador = obtener_adaptador(origen)
-    if adaptador is None:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Origen '{origen}' no soportado. Use amazon o shopify.",
-        )
+    if not adaptador:
+        raise HTTPException(status_code=400, detail="Origen no soportado.")
     registro = adaptador.traducir_payload(payload)
-    data = get_servicio_taller().crear(registro)
-    return {"status": "success", "origen": origen.lower(), "data": data}
+    return {"status": "success", "origen": origen.lower(), "data": get_servicio_taller().crear(registro)}
 
+# --- Módulo: Soporte (Persistido en SQL Server) ---
 
-@router.get(
-    "/casos/metricas-jerarquicas",
-    tags=["casos-temporales"],
-    summary="Métricas por tienda y global (Composite)",
-)
+@router.post("/soporte", summary="Registrar caso de soporte", status_code=status.HTTP_201_CREATED)
+def api_registrar_soporte(
+    payload: RegistroSoporteBody,
+    servicio_soporte = Depends(get_servicio_soporte)
+):
+    # Usamos el servicio de soporte refactorizado con SQL Server
+    resultado = servicio_soporte.registrar_caso(
+        user_id=payload.user_id, 
+        descripcion=payload.descripcion, 
+        order_id=payload.order_id,
+        case_type=payload.case_type,
+        priority=payload.priority
+    )
+    return {"status": "success", "data": resultado}
+
+@router.get("/soporte", summary="Listar todos los tickets")
+def api_listar_soporte():
+    return {"status": "success", "data": get_servicio_soporte().listar_todos_casos()}
+
+# --- NUEVO ENDPOINT: Listar tickets de un usuario ---
+@router.get("/soporte/mis-tickets/{user_id}", summary="Listar tickets de un usuario")
+def api_listar_mis_tickets(user_id: str, servicio_soporte = Depends(get_servicio_soporte)):
+    return {"status": "success", "data": servicio_soporte.listar_casos_usuario(user_id)}
+
+@router.put("/soporte/{case_id}/cerrar", summary="Cerrar caso de soporte")
+def api_cerrar_caso(case_id: str):
+    get_servicio_soporte().cerrar_caso(case_id)
+    return {"status": "success", "message": "Caso cerrado correctamente."}
+
+# --- Métricas y Consultas (Composite Pattern) ---
+
+@router.get("/taller/metricas", summary="Métricas jerárquicas")
 def metricas_jerarquicas():
     return {"status": "success", "data": get_servicio_taller().metricas_jerarquicas()}
 
-
-@router.get(
-    "/casos/sqlite",
-    tags=["registro-sqlite"],
-    summary="Listar casos en SQLite por correo",
-    description=(
-        "Devuelve los casos persistidos cuyo correo coincide (tras normalización) "
-        "con el indicado. Útil para consultar historial del solicitante."
-    ),
-)
-def casos_sqlite_por_email(
-    email: str = Query(
-        ...,
-        min_length=1,
-        max_length=MAX_EMAIL_LEN,
-        description="Correo del solicitante (se normaliza como en el registro).",
-    ),
-):
-    return {
-        "status": "success",
-        "data": get_servicio_soporte().listar_casos_por_email(email),
-    }
-
-
-@router.get(
-    "/casos/sqlite/todos",
-    tags=["registro-sqlite"],
-    summary="Listar todos los tickets SQLite",
-    description="Devuelve el listado global de tickets persistidos en SQLite (id descendente).",
-)
-def casos_sqlite_todos():
-    return {
-        "status": "success",
-        "data": get_servicio_soporte().listar_todos_casos(),
-    }
-
-
-@router.get(
-    "/casos/sqlite/por-solicitante",
-    tags=["registro-sqlite"],
-    summary="Listar tickets por correo y nombre del solicitante",
-    description=(
-        "Misma validación de nombre que al registrar ticket (sin dígitos). "
-        "Comparación de nombre sin distinguir mayúsculas."
-    ),
-)
-def casos_sqlite_por_solicitante(
-    email: str = Query(..., min_length=1, max_length=MAX_EMAIL_LEN),
-    nombre: str = Query(..., min_length=1, max_length=MAX_NOMBRE_LEN),
-):
-    return {
-        "status": "success",
-        "data": get_servicio_soporte().listar_casos_por_email_y_nombre(email, nombre),
-    }
-
-
-@router.get(
-    "/casos/persistidos/{caso_id}",
-    tags=["registro-sqlite"],
-    summary="Obtener ticket SQLite por id",
-    description="Detalle de un caso persistido por su id autonumérico.",
-)
-def obtener_ticket_sqlite(caso_id: int):
-    caso = get_servicio_soporte().obtener_caso_sqlite_por_id(caso_id)
-    if caso is None:
-        raise TicketSqliteNoEncontradoError(
-            "No hay ticket en la base de datos con ese id."
-        )
-    return {"status": "success", "data": caso}
-
-
-@router.get(
-    "/casos/{id}",
-    tags=["casos-temporales"],
-    summary="Buscar caso del taller por id",
-    response_description="Registro único en SQLite o 404",
-)
-def buscar_caso(id: int):
+@router.get("/taller/{id}", summary="Buscar caso del taller")
+def buscar_caso_taller(id: int):
     registro = get_servicio_taller().obtener_por_id(id)
-    if registro is None:
-        raise CasoNoEncontradoError("Caso no encontrado en la base de datos del taller.")
+    if not registro:
+        raise CasoNoEncontradoError("Caso no encontrado.")
     return registro
-
-
-@router.get(
-    "/casos/filtrar/",
-    tags=["casos-temporales"],
-    summary="Filtrar casos del taller por categoría",
-)
-def filtrar_por_categoria(categoria: Optional[str] = Query(None)):
-    return get_servicio_taller().filtrar_por_categoria(categoria)

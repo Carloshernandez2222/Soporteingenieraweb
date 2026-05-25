@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { fetchJson, mensajeError } from "../../api";
 import { useAuth } from "@/context/AuthContext";
 import { mostrarDetalleApi } from "@/lib/panelApiHints";
@@ -6,43 +6,34 @@ import { IconSearch } from "../../components/Icons";
 import PageHeader from "../../components/PageHeader";
 import Spinner from "../../components/Spinner";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
-import type { CasoSqlite } from "../../types";
 
-const NOMBRE_PATTERN = "^[A-Za-zÁÉÍÓÚÜáéíóúüÑñ\\s'.-]+$";
-const MAX_NOMBRE = 120;
+// Añadimos "description" al tipo de datos
+type CasoSoporteProf = {
+  case_id: string;
+  type: string;
+  status: string;
+  priority: string;
+  description: string; // <--- Nuevo campo
+  created_at: string;
+};
 
 export default function MisTickets() {
   useDocumentTitle("Mis tickets");
   const { user } = useAuth();
   const verApi = mostrarDetalleApi(user?.rol);
-  const [email, setEmail] = useState(user?.email ?? "");
-  const [nombre, setNombre] = useState("");
-  const [nombreLen, setNombreLen] = useState(0);
-  const [lista, setLista] = useState<CasoSqlite[] | null>(null);
+  
+  const [lista, setLista] = useState<CasoSoporteProf[] | null>(null);
   const [fb, setFb] = useState<string | null>(null);
   const [load, setLoad] = useState(false);
 
-  async function buscar() {
+  const buscarTickets = useCallback(async () => {
+    if (!user?.id) return;
+    
     setFb(null);
-    setLista(null);
-    const em = email.trim();
-    const nom = nombre.trim();
-    if (!em) {
-      setFb("Indique el correo con el que registró el ticket.");
-      return;
-    }
-    if (!nom) {
-      setFb("Indique el nombre completo tal como lo escribió al registrar la incidencia.");
-      return;
-    }
-    if (!/^[A-Za-zÁÉÍÓÚÜáéíóúüÑñ\s'.-]+$/.test(nom)) {
-      setFb("El nombre no puede contener dígitos (misma regla que al registrar).");
-      return;
-    }
     setLoad(true);
     try {
-      const res = await fetchJson<{ status: string; data: CasoSqlite[] }>(
-        `/casos/sqlite/por-solicitante?${new URLSearchParams({ email: em, nombre: nom })}`
+      const res = await fetchJson<{ status: string; data: CasoSoporteProf[] }>(
+        `/api/casos/soporte/mis-tickets/${user.id}`
       );
       setLista(res.data);
     } catch (e) {
@@ -50,101 +41,89 @@ export default function MisTickets() {
     } finally {
       setLoad(false);
     }
-  }
+  }, [user?.id]);
+
+  useEffect(() => {
+    buscarTickets();
+  }, [buscarTickets]);
 
   return (
     <>
       <PageHeader
         icon={<IconSearch size={26} />}
         title="Mis tickets"
-        subtitle="Busque las incidencias que registró usando el mismo correo y nombre completos que en el formulario de alta (validación en el servidor)."
+        subtitle="Consulta el historial de sus incidencias de soporte asignadas."
         meta={
           verApi ? (
             <span className="badge ok" style={{ fontSize: "0.72rem" }}>
-              GET /casos/sqlite/por-solicitante
+              GET /api/casos/soporte/mis-tickets/{"{user_id}"}
             </span>
           ) : undefined
         }
       />
 
       <div className="card animate-in" style={{ animationDelay: "0.05s" }}>
-        <div className="row-flex" style={{ flexWrap: "wrap", alignItems: "flex-end", gap: "1rem" }}>
-          <div className="field" style={{ flex: "1 1 220px" }}>
-            <label htmlFor="mt-email">Correo</label>
-            <input
-              id="mt-email"
-              type="email"
-              maxLength={254}
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), void buscar())}
-            />
-          </div>
-          <div className="field" style={{ flex: "1 1 220px" }}>
-            <label htmlFor="mt-nombre">Nombre completo (como al registrar)</label>
-            <input
-              id="mt-nombre"
-              maxLength={MAX_NOMBRE}
-              pattern={NOMBRE_PATTERN}
-              title="Letras, espacios, apóstrofes y guiones; sin dígitos"
-              value={nombre}
-              onChange={(e) => {
-                setNombre(e.target.value);
-                setNombreLen(e.target.value.length);
-              }}
-              onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), void buscar())}
-            />
-            <div className={`char-count${nombreLen > MAX_NOMBRE * 0.9 ? " warn" : ""}`}>
-              {nombreLen} / {MAX_NOMBRE}
-            </div>
-          </div>
-          <button type="button" className="btn" onClick={() => void buscar()} disabled={load}>
-            {load ? (
-              <>
-                <Spinner />
-                Buscando
-              </>
-            ) : (
-              "Buscar mis tickets"
-            )}
+        <div style={{ marginBottom: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+           <p style={{ margin: 0 }}>Historial asociado a tu cuenta.</p>
+           <button type="button" className="btn secondary" onClick={buscarTickets} disabled={load}>
+            {load ? <><Spinner /> Actualizando</> : "Refrescar"}
           </button>
         </div>
+
+        {load && !lista && (
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <Spinner /> Cargando tus tickets...
+          </div>
+        )}
+
         {fb && (
-          <div className="feedback show err" role="alert" style={{ marginTop: "1rem" }}>
+          <div className="feedback show err" role="alert">
             {fb}
           </div>
         )}
-        {lista && (
-          <div style={{ marginTop: "1.25rem" }}>
+
+        {lista && !load && (
+          <div>
             {lista.length === 0 ? (
-              <div className="empty-state">No hay tickets que coincidan con ese correo y nombre.</div>
+              <div className="empty-state">No tienes tickets de soporte registrados.</div>
             ) : (
               <>
                 <p className="hint" style={{ marginTop: 0 }}>
-                  {lista.length} ticket{lista.length !== 1 ? "s" : ""} encontrado
-                  {lista.length !== 1 ? "s" : ""}.
+                  {lista.length} ticket{lista.length !== 1 ? "s" : ""} encontrado{lista.length !== 1 ? "s" : ""}.
                 </p>
                 <div className="table-wrap">
                   <table>
                     <thead>
                       <tr>
-                        <th>Ticket</th>
-                        <th>Solicitante</th>
-                        <th>Resumen</th>
+                        <th>ID Ticket</th>
+                        <th>Descripción</th> {/* <--- Nueva cabecera */}
+                        <th>Tipo</th>
+                        <th>Prioridad</th>
+                        <th>Estado</th>
+                        <th>Fecha Creación</th>
                       </tr>
                     </thead>
                     <tbody>
                       {lista.map((r) => (
-                        <tr key={r.id}>
+                        <tr key={r.case_id}>
                           <td>
-                            <strong>#{r.id}</strong>
+                            <strong>#{r.case_id.split("-")[0]}</strong>
                           </td>
-                          <td>{r.nombre}</td>
+                          <td style={{ maxWidth: "250px" }}> {/* <--- Nueva celda con la descripción */}
+                            {r.description ? (
+                              r.description.length > 50 
+                                ? r.description.slice(0, 50) + "..." 
+                                : r.description
+                            ) : "Sin descripción"}
+                          </td>
+                          <td>{r.type}</td>
                           <td>
-                            {r.descripcion.slice(0, 72)}
-                            {r.descripcion.length > 72 ? "…" : ""}
+                            <span className={`badge ${r.priority.toLowerCase() === 'high' ? 'err' : 'ok'}`}>
+                              {r.priority}
+                            </span>
                           </td>
+                          <td>{r.status}</td>
+                          <td>{new Date(r.created_at).toLocaleDateString()}</td>
                         </tr>
                       ))}
                     </tbody>
