@@ -2,12 +2,13 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { mostrarDetalleApi } from "@/lib/panelApiHints";
 import { fetchJson, mensajeError } from "../../api";
+import { obtenerCasoTaller } from "@/lib/panelPatronesApi";
 import JsonBlock from "../../components/JsonBlock";
 import { IconSearch } from "../../components/Icons";
 import PageHeader from "../../components/PageHeader";
 import Spinner from "../../components/Spinner";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
-import type { CasoSqlite, CasoTemporal } from "../../types";
+import type { CasoSqlite } from "../../types";
 
 export default function Consultar() {
   useDocumentTitle("Consultas");
@@ -37,7 +38,7 @@ export default function Consultar() {
     }
     setTempLoad(true);
     try {
-      const data = await fetchJson<CasoTemporal>(`/casos/${encodeURIComponent(tempId)}`);
+      const data = await obtenerCasoTaller(Number(tempId.trim()));
       setTempJson(JSON.stringify(data, null, 2));
     } catch (e) {
       setTempFb(mensajeError(e));
@@ -56,7 +57,7 @@ export default function Consultar() {
     setEmailLoad(true);
     try {
       const res = await fetchJson<{ status: string; data: CasoSqlite[] }>(
-        `/casos/sqlite?${new URLSearchParams({ email: email.trim() })}`
+        `/api/casos/registro/tickets/por-email?${new URLSearchParams({ email: email.trim() })}`
       );
       setListaEmail(res.data);
     } catch (e) {
@@ -76,7 +77,7 @@ export default function Consultar() {
     setPersistLoad(true);
     try {
       const res = await fetchJson<{ status: string; data: CasoSqlite }>(
-        `/casos/persistidos/${encodeURIComponent(pid)}`
+        `/api/casos/registro/tickets/${encodeURIComponent(pid)}`
       );
       setPersistJson(JSON.stringify(res.data, null, 2));
     } catch (e) {
@@ -110,8 +111,8 @@ export default function Consultar() {
         <div className="accordion-body">
           {verApi ? (
             <p className="hint" style={{ marginTop: 0 }}>
-              Endpoint <code>GET /casos/{"{id}"}</code>. Registros creados con{" "}
-              <code>POST /casos/crear</code> (tabla <code>casos_taller</code>).
+              Endpoint <code>GET /api/casos/taller/{"{id}"}</code>. Registros creados con{" "}
+              <code>POST /api/casos/taller</code> (tabla <code>casos_taller</code>).
             </p>
           ) : (
             <p className="hint" style={{ marginTop: 0 }}>
@@ -156,7 +157,7 @@ export default function Consultar() {
         <div className="accordion-body">
           {verApi ? (
             <p className="hint" style={{ marginTop: 0 }}>
-              Endpoint <code>GET /casos/sqlite?email=</code>. Lista ordenada por id descendente.
+              Endpoint <code>GET /api/casos/registro/tickets/por-email?email=</code>.
             </p>
           ) : (
             <p className="hint" style={{ marginTop: 0 }}>
@@ -243,7 +244,7 @@ export default function Consultar() {
         <div className="accordion-body">
           {verApi ? (
             <p className="hint" style={{ marginTop: 0 }}>
-              Endpoint <code>GET /casos/persistidos/{"{id}"}</code>. Devuelve el registro completo en SQLite.
+              Endpoint <code>GET /api/casos/registro/tickets/{"{id}"}</code>.
             </p>
           ) : (
             <p className="hint" style={{ marginTop: 0 }}>

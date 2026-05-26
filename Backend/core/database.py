@@ -1,10 +1,10 @@
-# Cambia esta línea:
-# from sqlmodel import create_sql_engine, SQLModel
+import os
 
-# Por esta línea:
-from sqlmodel import create_engine, SQLModel
+from sqlmodel import SQLModel, create_engine
 
-# Y donde tenías engine = create_sql_engine(...) usa:
-DATABASE_URL = "mssql+pyodbc://sa:TrackAid_Secure2026!@127.0.0.1:1433/TrackAidDB?driver=ODBC+Driver+18+for+SQL+Server&Encrypt=yes&TrustServerCertificate=yes"
+from ..utils.sqlserver import sqlalchemy_database_url
 
-engine = create_engine(DATABASE_URL, echo=True)
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip() or sqlalchemy_database_url()
+engine = create_engine(DATABASE_URL, echo=os.environ.get("SQL_ECHO", "").lower() in ("1", "true", "yes"))
+
+__all__ = ["SQLModel", "engine", "DATABASE_URL"]

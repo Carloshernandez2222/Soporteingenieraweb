@@ -44,7 +44,7 @@ export default function TallerMetricas() {
         meta={
           verApi ? (
             <span className="badge ok" style={{ fontSize: "0.72rem" }}>
-              GET /casos/metricas-jerarquicas
+              GET /api/casos/taller/metricas
             </span>
           ) : undefined
         }

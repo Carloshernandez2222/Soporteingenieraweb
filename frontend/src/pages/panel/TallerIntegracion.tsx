@@ -62,7 +62,7 @@ export default function TallerIntegracion() {
         meta={
           verApi ? (
             <span className="badge ok" style={{ fontSize: "0.72rem" }}>
-              POST /casos/integracion
+              POST /api/casos/taller/integracion
             </span>
           ) : undefined
         }

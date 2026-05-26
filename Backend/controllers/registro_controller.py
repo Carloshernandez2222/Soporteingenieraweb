@@ -2,7 +2,7 @@ from fastapi import APIRouter, Query, Request
 
 from ..constants import MAX_DESCRIPCION_LEN, MAX_EMAIL_LEN, MAX_NOMBRE_LEN
 from ..constants import normalizar_rol
-from ..dependencies import get_servicio_soporte
+from ..dependencies import get_servicio_registro_sqlite
 from ..core.rate_limit import verificar_limite_registrar
 from ..patterns.strategy import obtener_estrategia
 from ..utils.request_helpers import ip_cliente
@@ -53,7 +53,7 @@ def registrar_caso_api(
             "creado_por_rol": creado_por_rol,
         }
     )
-    return get_servicio_soporte().registrar_caso(
+    return get_servicio_registro_sqlite().registrar_caso(
         datos["nombre"],
         datos["email"],
         datos["descripcion"],

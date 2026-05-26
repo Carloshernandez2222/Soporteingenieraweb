@@ -54,7 +54,7 @@ export default function TallerCrear() {
         meta={
           verApi ? (
             <span className="badge ok" style={{ fontSize: "0.72rem" }}>
-              POST /casos/crear
+              POST /api/casos/taller
             </span>
           ) : undefined
         }

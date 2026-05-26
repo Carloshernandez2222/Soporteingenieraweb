@@ -18,6 +18,21 @@ class UserDB(SQLModel, table=True):
     PersonID: UUID = Field(foreign_key="Persons.PersonID")
     person: PersonDB = Relationship()
 
+
+class RoleDB(SQLModel, table=True):
+    __tablename__ = "Roles"
+    RoleID: UUID = Field(default_factory=uuid4, primary_key=True)
+    RoleName: str
+    Description: str | None = None
+    IsActive: bool = Field(default=True)
+
+
+class UserRoleDB(SQLModel, table=True):
+    __tablename__ = "UserRoles"
+    UserID: UUID = Field(foreign_key="Users.UserID", primary_key=True)
+    RoleID: UUID = Field(foreign_key="Roles.RoleID", primary_key=True)
+    IsActive: bool = Field(default=True)
+
 class OrderDB(SQLModel, table=True):
     __tablename__ = "Orders"
     OrderID: UUID = Field(default_factory=uuid4, primary_key=True)

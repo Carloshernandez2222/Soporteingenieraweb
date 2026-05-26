@@ -7,6 +7,7 @@ from sqlmodel import Session, select
 from Backend.core.database import engine
 from Backend.models.db_models import UserDB, PersonDB
 from Backend.constants import ROL_DEFECTO
+from Backend.core.auth_roles import asignar_rol_usuario, obtener_rol_usuario
 from Backend.utils.email_utils import validar_y_normalizar_correo
 from Backend.core.exceptions import (
     EmailAlreadyExistsError, 
@@ -54,15 +55,17 @@ class ServicioAuth:
                 PersonID=nueva_persona.PersonID
             )
             session.add(nuevo_usuario)
-            
-            # 4. Persistir ambos en la misma transacción
+            session.flush()
+            asignar_rol_usuario(session, nuevo_usuario.UserID, ROL_DEFECTO)
+
+            # 4. Persistir en la misma transacción
             session.commit()
             session.refresh(nuevo_usuario)
-            
+
             return {
-                "id": str(nuevo_usuario.UserID), 
-                "email": nuevo_usuario.Email, 
-                "rol": ROL_DEFECTO
+                "id": str(nuevo_usuario.UserID),
+                "email": nuevo_usuario.Email,
+                "rol": ROL_DEFECTO,
             }
 
     def login(self, email: str, password: str) -> dict[str, Any]:
@@ -75,11 +78,13 @@ class ServicioAuth:
             
             if not _verify_password(password, user.PasswordHash):
                 raise InvalidCredentialsError()
-            
+
+            rol = obtener_rol_usuario(session, user.UserID)
+
             return {
-                "id": str(user.UserID), 
-                "email": user.Email, 
-                "rol": ROL_DEFECTO
+                "id": str(user.UserID),
+                "email": user.Email,
+                "rol": rol,
             }
 
     def crear_token_reset(self, email: str) -> str:

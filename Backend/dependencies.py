@@ -7,12 +7,14 @@ Inyección de dependencias: servicios de negocio (singletons por proceso).
 from __future__ import annotations
 
 from .services.auth_service import ServicioAuth
+from .services.registro_sqlite_service import ServicioRegistroSqlite
 from .services.soporte_service import ServicioSoporte
 from .services.taller_service import ServicioTaller
 
 _soporte: ServicioSoporte | None = None
 _auth: ServicioAuth | None = None
 _taller: ServicioTaller | None = None
+_registro_sqlite: ServicioRegistroSqlite | None = None
 
 
 def get_servicio_soporte() -> ServicioSoporte:
@@ -36,9 +38,17 @@ def get_servicio_taller() -> ServicioTaller:
     return _taller
 
 
+def get_servicio_registro_sqlite() -> ServicioRegistroSqlite:
+    global _registro_sqlite
+    if _registro_sqlite is None:
+        _registro_sqlite = ServicioRegistroSqlite()
+    return _registro_sqlite
+
+
 def reiniciar_servicios() -> None:
     """Nuevas instancias (p. ej. tras cambiar DATABASE_PATH en tests)."""
-    global _soporte, _auth, _taller
+    global _soporte, _auth, _taller, _registro_sqlite
     _soporte = ServicioSoporte()
     _auth = ServicioAuth()
     _taller = ServicioTaller()
+    _registro_sqlite = ServicioRegistroSqlite()

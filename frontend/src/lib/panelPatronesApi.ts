@@ -1,5 +1,6 @@
 /**
  * Cliente API para endpoints del taller y soporte (patrones: Adapter, Composite, Strategy).
+ * Rutas bajo `/api/casos/*` (MVC en Backend).
  */
 
 import { fetchJson } from "../api";
@@ -49,11 +50,12 @@ export function ejemploPayloadIntegracion(origen: OrigenIntegracion) {
 }
 
 export async function crearCasoTaller(body: CasoCrearBody) {
-  return fetchJson<{ status: string; data: CasoTemporal }>("/casos/crear", {
+  const res = await fetchJson<{ status: string; data: CasoTemporal }>("/api/casos/taller", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
+  return res;
 }
 
 export async function crearCasoIntegracion(
@@ -61,7 +63,7 @@ export async function crearCasoIntegracion(
   payload: Record<string, unknown>
 ) {
   return fetchJson<{ status: string; origen: string; data: CasoTemporal }>(
-    `/casos/integracion?${new URLSearchParams({ origen })}`,
+    `/api/casos/taller/integracion?${new URLSearchParams({ origen })}`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -72,30 +74,47 @@ export async function crearCasoIntegracion(
 
 export async function obtenerMetricasJerarquicas() {
   return fetchJson<{ status: string; data: MetricasJerarquicas }>(
-    "/casos/metricas-jerarquicas"
+    "/api/casos/taller/metricas"
   );
 }
 
-// Retornamos Promise<any> para evitar conflictos de TypeScript con el Chatbot
+export async function listarCasosTaller() {
+  const res = await fetchJson<{ status: string; data: CasoTemporal[] }>("/api/casos/taller");
+  return res.data;
+}
+
+export async function filtrarCasosTaller(categoria?: string) {
+  const q = categoria?.trim()
+    ? `?${new URLSearchParams({ categoria: categoria.trim() })}`
+    : "";
+  const res = await fetchJson<{ status: string; data: CasoTemporal[] }>(
+    `/api/casos/taller/filtrar${q}`
+  );
+  return res.data;
+}
+
+export async function obtenerCasoTaller(id: number) {
+  const res = await fetchJson<{ status: string; data: CasoTemporal }>(
+    `/api/casos/taller/${encodeURIComponent(String(id))}`
+  );
+  return res.data;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function registrarCasoStrategy(payload: any): Promise<any> {
-  // Si tiene user_id, es el flujo del nuevo backend SQL Server
   if (payload.user_id) {
-    return fetchJson(
-      "/api/casos/soporte", 
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: payload.user_id,
-          descripcion: payload.descripcion,
-          case_type: payload.case_type || "General",
-          priority: payload.priority || "Medium"
-        }),
-      }
-    );
+    return fetchJson("/api/casos/soporte", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: payload.user_id,
+        descripcion: payload.descripcion,
+        case_type: payload.case_type || "General",
+        priority: payload.priority || "Medium",
+      }),
+    });
   }
 
-  // Flujo antiguo para el Taller/Chatbot (SQLite)
   const q = new URLSearchParams({ origen: payload.origen || "web" });
   if (payload.nombre) q.set("nombre", payload.nombre);
   if (payload.email) q.set("email", payload.email);
@@ -103,6 +122,6 @@ export async function registrarCasoStrategy(payload: any): Promise<any> {
   if (payload.mensaje) q.set("mensaje", payload.mensaje);
   if (payload.categoria) q.set("categoria", payload.categoria);
   if (payload.creado_por_rol) q.set("creado_por_rol", payload.creado_por_rol);
-  
+
   return fetchJson(`/registrar?${q}`, { method: "POST" });
 }

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { fetchJson, mensajeError } from "../../api";
+import { mensajeError } from "../../api";
 import { useAuth } from "@/context/AuthContext";
 import { mostrarDetalleApi } from "@/lib/panelApiHints";
 import { IconClipboard } from "../../components/Icons";
 import PageHeader from "../../components/PageHeader";
 import Spinner from "../../components/Spinner";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
+import { listarCasosTaller } from "@/lib/panelPatronesApi";
 import type { CasoTemporal } from "../../types";
 
 function TableSkeleton() {
@@ -36,7 +37,7 @@ export default function TallerLista() {
     setLoad(true);
     setRows(null);
     try {
-      const data = await fetchJson<CasoTemporal[]>("/casos/todos");
+      const data = await listarCasosTaller();
       setRows(data);
     } catch (e) {
       setErr(mensajeError(e));
@@ -72,7 +73,7 @@ export default function TallerLista() {
       <div className="card animate-in">
         {verApi && (
           <p className="hint" style={{ marginTop: 0 }}>
-            <code>GET /casos/todos</code>
+            <code>GET /api/casos/taller</code>
           </p>
         )}
         {err && (

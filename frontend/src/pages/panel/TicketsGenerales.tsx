@@ -2,12 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { mostrarDetalleApi } from "@/lib/panelApiHints";
 import { fetchJson, mensajeError } from "../../api";
+import { listarCasosTaller } from "@/lib/panelPatronesApi";
 import { IconTicket } from "../../components/Icons";
 import PageHeader from "../../components/PageHeader";
 import Spinner from "../../components/Spinner";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 import { formatCreatedAt } from "../../lib/formatCreatedAt";
-import type { CasoSqlite, CasoTemporal } from "../../types";
+import type { CasoSqlite } from "../../types";
 
 type Row = {
   clave: string;
@@ -36,8 +37,8 @@ export default function TicketsGenerales() {
     setLoad(true);
     try {
       const [casos, tickets] = await Promise.all([
-        fetchJson<CasoTemporal[]>("/casos/todos"),
-        fetchJson<{ status: string; data: CasoSqlite[] }>("/casos/sqlite/todos"),
+        listarCasosTaller(),
+        fetchJson<{ status: string; data: CasoSqlite[] }>("/api/casos/registro/tickets"),
       ]);
       const unificado: Row[] = [
         ...casos.map((c) => ({
@@ -116,7 +117,7 @@ export default function TicketsGenerales() {
       <div className="card animate-in">
         {verApi && (
           <p className="hint" style={{ marginTop: 0 }}>
-            <code>GET /casos/todos</code> + <code>GET /casos/sqlite/todos</code>
+            <code>GET /api/casos/taller</code> + <code>GET /api/casos/registro/tickets</code>
           </p>
         )}
         {err && (

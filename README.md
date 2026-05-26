@@ -6,14 +6,13 @@ API FastAPI + SPA React (Vite). Centro de soporte con registro de incidencias, p
 
 | Capa | Ubicación | Rol |
 |------|-----------|-----|
-| **Modelos** | `src/models/` | Esquemas Pydantic y DTOs (`auth_schemas`, `caso_soporte`, etc.). |
-| **Vistas** | `src/views/` | Capa de presentación API (respuestas JSON); en REST suele integrarse en controladores. |
-| **Controladores** | `src/controllers/` | Rutas HTTP: `auth`, `casos`, `registro`, `health`, `spa`. |
-| **Servicios** | `src/services/` | Lógica de negocio y acceso a datos: `auth`, `soporte`, `taller` (SQLite). |
-| **Fábrica** | `src/app_factory.py` | Ensambla middleware, routers y excepciones. |
-| **Entrada** | `conection.py` | Expone `test` para Gunicorn/Uvicorn (`conection:test`). |
+| **Modelos** | `Backend/models/` | Esquemas Pydantic, SQLModel (`db_models`) y DTOs. |
+| **Controladores** | `Backend/controllers/` | Rutas HTTP: `auth`, `casos`, `registro`, `health`, `spa`, legacy `/casos`. |
+| **Servicios** | `Backend/services/` | `auth` y `soporte` (SQL Server); `taller` y `registro` (SQLite). |
+| **Fábrica** | `Backend/app_factory.py` | Ensambla middleware, routers y excepciones. |
+| **Entrada** | `Backend/conection.py` | Expone `test` para Gunicorn (`Backend.conection:test`). |
 
-Utilidades: `src/exceptions.py`, `src/dependencies.py`, `src/constants.py`, `src/email_utils.py`.
+Utilidades: `Backend/core/`, `Backend/dependencies.py`, `Backend/constants.py`, `Backend/utils/`.
 
 ## Desarrollo local
 
@@ -22,14 +21,29 @@ python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\act
 pip install -r requirements.txt
 pip install -r requirements-dev.txt   # opcional: tests
 
-# Backend
-uvicorn conection:test --reload --host 127.0.0.1 --port 8000
+# Backend (desde la raíz del repo)
+uvicorn Backend.conection:test --reload --host 127.0.0.1 --port 8000
 
 # Frontend (otra terminal)
 cd frontend && npm install && npm run dev
 ```
 
-- Variable opcional: `DATABASE_PATH` (ruta al archivo SQLite; por defecto `soporte.db` en la raíz del repo).
+- `DATABASE_PATH`: SQLite para taller y tickets legacy (`/registrar`, `/casos/sqlite`). Por defecto `soporte.db` en la raíz.
+- SQL Server (auth + casos `/api/casos/soporte`): `SQLSERVER_HOST`, `SQLSERVER_DATABASE`, `SQLSERVER_USER`, `SQLSERVER_PASSWORD` (o `DATABASE_URL` completa). Sin contraseña en código: usar variables de entorno o Azure App Settings.
+- Rutas del panel bajo `/api/casos/*` (MVC). Las rutas `/casos/*` legacy siguen activas por compatibilidad.
+- Arranque con **Gunicorn + Uvicorn** sin cambios: `startup.sh` → `Backend.conection:test`.
+
+### Cuentas demo del panel (misma contraseña)
+
+Al iniciar el backend se crean o actualizan tres usuarios en SQL Server (salvo `SKIP_DB_SEED=1`):
+
+| Correo | Rol en el dashboard | Contraseña |
+|--------|---------------------|------------|
+| `webmaster@trackaid.demo` | webmaster | `TrackAid2026!` |
+| `soporte@trackaid.demo` | soporte | `TrackAid2026!` |
+| `usuario@trackaid.demo` | usuario | `TrackAid2026!` |
+
+Requisitos: base `TrackAidDB` desplegada (`schema.sql`) y variables `SQLSERVER_*` configuradas. Cada rol ve distintas tarjetas en el panel según `RequireRole` en el frontend.
 
 ## Despliegue en Azure App Service (Linux)
 
@@ -39,7 +53,7 @@ Ya tienes referencia en `.azure/config` (grupo, plan, web app). Pasos habituales
 
 Eso significa que en el servidor **no existe** `frontend/dist/index.html`.
 
-**Si usas `az webapp up`:** el CLI arma el zip **saltándose todo lo que está en `.gitignore`**. Como **`frontend/dist/` está ignorado**, **aunque hayas hecho `npm run build` en local, esa carpeta no entra en el zip** y Azure nunca recibe el front. No es que el build falle: simplemente **no se sube**.
+**Si usas `az webapp up`:** el CLI puede omitir archivos según `.gitignore`. En este repo **`frontend/dist/` está versionado en git** para despliegues directos desde la rama principal; si lo quitáis del repositorio, usad `POST_BUILD_COMMAND` o el script `scripts/azure-deploy-zip.sh`.
 
 **Arreglo inmediato (recomendado con `az webapp up` / zip):**
 

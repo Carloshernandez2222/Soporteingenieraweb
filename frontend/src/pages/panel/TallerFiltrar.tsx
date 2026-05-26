@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { fetchJson, mensajeError } from "../../api";
+import { mensajeError } from "../../api";
+import { filtrarCasosTaller } from "@/lib/panelPatronesApi";
 import { useAuth } from "@/context/AuthContext";
 import { mostrarDetalleApi } from "@/lib/panelApiHints";
 import { IconSearch } from "../../components/Icons";
@@ -22,10 +23,7 @@ export default function TallerFiltrar() {
     setRows(null);
     setLoad(true);
     try {
-      const q = cat.trim()
-        ? `/casos/filtrar/?${new URLSearchParams({ categoria: cat.trim() })}`
-        : "/casos/filtrar/";
-      const data = await fetchJson<CasoTemporal[]>(q);
+      const data = await filtrarCasosTaller(cat.trim() || undefined);
       setRows(data);
     } catch (e) {
       setErr(mensajeError(e));
@@ -43,7 +41,7 @@ export default function TallerFiltrar() {
         meta={
           verApi ? (
             <span className="badge ok" style={{ fontSize: "0.72rem" }}>
-              GET /casos/filtrar
+              GET /api/casos/taller/filtrar
             </span>
           ) : undefined
         }

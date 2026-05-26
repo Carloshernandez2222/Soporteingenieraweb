@@ -1,7 +1,7 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Body, HTTPException, Query, status, Depends
 from pydantic import BaseModel
-from ..dependencies import get_servicio_soporte, get_servicio_taller
+from ..dependencies import get_servicio_registro_sqlite, get_servicio_soporte, get_servicio_taller
 from ..core.exceptions import CasoNoEncontradoError
 from ..models import CasoSoporte
 from ..patterns.adapter import obtener_adaptador
@@ -77,9 +77,33 @@ def api_cerrar_caso(case_id: str):
 def metricas_jerarquicas():
     return {"status": "success", "data": get_servicio_taller().metricas_jerarquicas()}
 
+@router.get("/taller/filtrar", summary="Filtrar casos del taller por categoría")
+def filtrar_casos_taller(categoria: str | None = Query(None)):
+    return {"status": "success", "data": get_servicio_taller().filtrar_por_categoria(categoria)}
+
+
 @router.get("/taller/{id}", summary="Buscar caso del taller")
 def buscar_caso_taller(id: int):
     registro = get_servicio_taller().obtener_por_id(id)
     if not registro:
         raise CasoNoEncontradoError("Caso no encontrado.")
-    return registro
+    return {"status": "success", "data": registro}
+
+
+# --- Registro web/chatbot (SQLite, lectura vía API) ---
+
+@router.get("/registro/tickets", summary="Listar tickets de registro (SQLite)")
+def api_registro_todos():
+    return {"status": "success", "data": get_servicio_registro_sqlite().listar_todos()}
+
+
+@router.get("/registro/tickets/por-email", summary="Tickets por correo (SQLite)")
+def api_registro_por_email(email: str = Query(...)):
+    data = get_servicio_registro_sqlite().listar_por_email(email)
+    return {"status": "success", "data": data}
+
+
+@router.get("/registro/tickets/{ticket_id}", summary="Detalle ticket registro (SQLite)")
+def api_registro_detalle(ticket_id: int):
+    data = get_servicio_registro_sqlite().obtener_por_id(ticket_id)
+    return {"status": "success", "data": data}
