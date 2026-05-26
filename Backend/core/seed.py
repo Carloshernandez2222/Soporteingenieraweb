@@ -8,17 +8,17 @@ from __future__ import annotations
 
 import logging
 from typing import Any
+from uuid import UUID
 
 from sqlmodel import Session, select
 
 from Backend.constants import ROLES_USUARIO, ROL_DEFECTO, normalizar_rol
-from Backend.core.database import engine
+from Backend.core.database import get_engine
 from Backend.models.db_models import PersonDB, RoleDB, UserDB, UserRoleDB
 from Backend.services.auth_service import _hash_password
 
 logger = logging.getLogger("trackaid.seed")
 
-# Cuentas de demostración (misma contraseña para las tres)
 DEMO_PASSWORD = "TrackAid2026!"
 
 DEMO_USERS: list[dict[str, str]] = [
@@ -55,7 +55,7 @@ def _asegurar_roles(session: Session) -> dict[str, RoleDB]:
     return por_nombre
 
 
-def _asignar_rol(session: Session, user_id: Any, rol_nombre: str, roles: dict[str, RoleDB]) -> None:
+def _asignar_rol(session: Session, user_id: UUID, rol_nombre: str, roles: dict[str, RoleDB]) -> None:
     rol_key = normalizar_rol(rol_nombre)
     role = roles.get(rol_key) or roles[ROL_DEFECTO]
     link = session.exec(
@@ -69,8 +69,8 @@ def _asignar_rol(session: Session, user_id: Any, rol_nombre: str, roles: dict[st
 
 
 def ejecutar_seed_demo() -> None:
-    """Crea roles y usuarios demo si SQL Server está disponible."""
-    roles_map: dict[str, RoleDB] = {}
+    """Crea roles y usuarios demo si el motor SQL está disponible."""
+    engine = get_engine()
     with Session(engine) as session:
         roles_map = _asegurar_roles(session)
         session.commit()
@@ -107,6 +107,6 @@ def ejecutar_seed_demo() -> None:
         session.commit()
 
     logger.info(
-        "Seed demo listo (%d cuentas, contraseña compartida documentada en README).",
+        "Seed demo listo (%d cuentas, contraseña: documentada en README).",
         len(DEMO_USERS),
     )

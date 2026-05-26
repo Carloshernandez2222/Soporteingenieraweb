@@ -1,5 +1,5 @@
 """
-Fábrica de la aplicación FastAPI (ensambla middleware, excepciones, routers MVC).
+Fábrica de la aplicación FastAPI (patrón Fábrica: ensambla middleware, excepciones, routers MVC).
 """
 
 import logging
@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .config_paths import FRONTEND_ASSETS_DIR, FRONTEND_IMAGES_DIR
+from .core.database import init_db
 from .controllers.auth_controller import router as auth_router
 from .controllers.casos_controller import router as casos_router
 from .controllers.health_controller import router as health_router
@@ -21,7 +22,6 @@ from .controllers.legacy_casos_controller import router as legacy_casos_router
 from .controllers.registro_controller import router as registro_router
 from .controllers.spa_controller import router as spa_router
 
-# Importaciones de excepciones
 from .core.exceptions import (
     CasoNoEncontradoError,
     CorreoInvalidoError,
@@ -32,8 +32,9 @@ from .core.exceptions import (
     TicketSqliteNoEncontradoError,
     EmailAlreadyExistsError,
     UserNotFoundError,
-    InvalidCredentialsError
+    InvalidCredentialsError,
 )
+
 
 def _cors_allow_origins() -> list[str]:
     raw = os.environ.get("CORS_ORIGINS", "").strip()
@@ -42,6 +43,11 @@ def _cors_allow_origins() -> list[str]:
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
+    try:
+        init_db()
+    except Exception as exc:
+        logging.getLogger("trackaid").warning("init_db omitido: %s", exc)
+
     if os.environ.get("SKIP_DB_SEED", "").lower() not in ("1", "true", "yes"):
         try:
             from .core.seed import ejecutar_seed_demo
@@ -57,7 +63,6 @@ async def _lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(title="API Soporte Técnico", version="1.0.0", lifespan=_lifespan)
 
-    # Static Files
     if os.path.isdir(FRONTEND_ASSETS_DIR):
         app.mount("/assets", StaticFiles(directory=FRONTEND_ASSETS_DIR), name="vite_assets")
     if os.path.isdir(FRONTEND_IMAGES_DIR):
@@ -65,7 +70,6 @@ def create_app() -> FastAPI:
 
     app.add_middleware(CORSMiddleware, allow_origins=_cors_allow_origins(), allow_methods=["*"], allow_headers=["*"])
 
-    # --- Exception Handlers Globales ---
     @app.exception_handler(RequestValidationError)
     async def validacion_pydantic_handler(request: Request, exc: RequestValidationError):
         return JSONResponse(status_code=422, content={"status": "error", "message": "Datos de entrada inválidos."})
@@ -92,7 +96,6 @@ def create_app() -> FastAPI:
             return JSONResponse(status_code=400, content={"status": "error", "code": "ORDER_NOT_FOUND", "message": "El ID de pedido no existe."})
         return JSONResponse(status_code=400, content={"status": "error", "message": str(exc)})
 
-    # Otros handlers básicos que ya tenías...
     @app.exception_handler(NombreInvalidoError)
     async def nombre_invalido_handler(request: Request, exc: NombreInvalidoError):
         return JSONResponse(status_code=400, content={"status": "error", "message": str(exc)})
@@ -112,7 +115,6 @@ def create_app() -> FastAPI:
     async def id_duplicado_handler(request: Request, exc: IdDuplicadoError):
         return JSONResponse(status_code=409, content={"status": "error", "message": str(exc)})
 
-    # --- Incluir Routers ---
     app.include_router(health_router)
     app.include_router(legacy_casos_router)
     app.include_router(casos_router)

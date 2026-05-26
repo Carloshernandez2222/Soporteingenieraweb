@@ -9,8 +9,8 @@ API FastAPI + SPA React (Vite). Centro de soporte con registro de incidencias, p
 | **Modelos** | `Backend/models/` | Esquemas Pydantic, SQLModel (`db_models`) y DTOs. |
 | **Controladores** | `Backend/controllers/` | Rutas HTTP: `auth`, `casos`, `registro`, `health`, `spa`, legacy `/casos`. |
 | **Servicios** | `Backend/services/` | `auth` y `soporte` (SQL Server); `taller` y `registro` (SQLite). |
-| **Fábrica** | `Backend/app_factory.py` | Ensambla middleware, routers y excepciones. |
-| **Entrada** | `Backend/conection.py` | Expone `test` para Gunicorn (`Backend.conection:test`). |
+| **Fábrica** | `Backend/app_factory.py` | Patrón Fábrica: ensambla middleware, routers y excepciones. |
+| **Entrada** | `Backend/conection.py` | Expone `test` para Gunicorn/Uvicorn (`Backend.conection:test`). |
 
 Utilidades: `Backend/core/`, `Backend/dependencies.py`, `Backend/constants.py`, `Backend/utils/`.
 

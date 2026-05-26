@@ -4,7 +4,7 @@ import hashlib
 import time
 from typing import Any
 from sqlmodel import Session, select
-from Backend.core.database import engine
+from Backend.core.database import get_engine
 from Backend.models.db_models import UserDB, PersonDB
 from Backend.constants import ROL_DEFECTO
 from Backend.core.auth_roles import asignar_rol_usuario, obtener_rol_usuario
@@ -37,7 +37,7 @@ class ServicioAuth:
     def registrar(self, nombre: str, apellidos: str, email: str, password: str) -> dict[str, Any]:
         email_norm = validar_y_normalizar_correo(email)
         
-        with Session(engine) as session:
+        with Session(get_engine()) as session:
             # 1. Validar existencia
             existing = session.exec(select(UserDB).where(UserDB.Email == email_norm)).first()
             if existing:
@@ -71,7 +71,7 @@ class ServicioAuth:
     def login(self, email: str, password: str) -> dict[str, Any]:
         email_norm = validar_y_normalizar_correo(email)
         
-        with Session(engine) as session:
+        with Session(get_engine()) as session:
             user = session.exec(select(UserDB).where(UserDB.Email == email_norm)).first()
             if not user:
                 raise UserNotFoundError()
@@ -88,7 +88,7 @@ class ServicioAuth:
             }
 
     def crear_token_reset(self, email: str) -> str:
-        with Session(engine) as session:
+        with Session(get_engine()) as session:
             user = session.exec(select(UserDB).where(UserDB.Email == email)).first()
             if not user:
                 raise UserNotFoundError()
@@ -107,7 +107,7 @@ class ServicioAuth:
         if time.time() > exp:
             raise ValueError("TOKEN_EXPIRADO")
         
-        with Session(engine) as session:
+        with Session(get_engine()) as session:
             user = session.exec(select(UserDB).where(UserDB.Email == email_norm)).first()
             if not user:
                 raise UserNotFoundError()
