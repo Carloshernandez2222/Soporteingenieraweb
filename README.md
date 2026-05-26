@@ -6,14 +6,14 @@ API FastAPI + SPA React (Vite). Centro de soporte con registro de incidencias, p
 
 | Capa | Ubicación | Rol |
 |------|-----------|-----|
-| **Modelos** | `src/models/` | Esquemas Pydantic y DTOs (`auth_schemas`, `caso_soporte`, etc.). |
-| **Vistas** | `src/views/` | Capa de presentación API (respuestas JSON); en REST suele integrarse en controladores. |
-| **Controladores** | `src/controllers/` | Rutas HTTP: `auth`, `casos`, `registro`, `health`, `spa`. |
-| **Servicios** | `src/services/` | Lógica de negocio y acceso a datos: `auth`, `soporte`, `taller` (SQLite). |
-| **Fábrica** | `src/app_factory.py` | Ensambla middleware, routers y excepciones. |
-| **Entrada** | `conection.py` | Expone `test` para Gunicorn/Uvicorn (`conection:test`). |
+| **Modelos** | `Backend/models/` | Esquemas Pydantic y DTOs (`auth_schemas`, `caso_soporte`, etc.). |
+| **Vistas** | `Backend/views/` | Capa de presentación API (respuestas JSON); en REST suele integrarse en controladores. |
+| **Controladores** | `Backend/controllers/` | Rutas HTTP: `auth`, `casos`, `registro`, `health`, `spa`. |
+| **Servicios** | `Backend/services/` | Lógica de negocio y acceso a datos: `auth`, `soporte`, `taller` (SQLite/SQLModel). |
+| **Fábrica** | `Backend/app_factory.py` | Patrón Fábrica: ensambla middleware, routers y excepciones. |
+| **Entrada** | `conection.py` / `Backend/conection.py` | Expone `test` para Gunicorn/Uvicorn (`conection:test`). |
 
-Utilidades: `src/exceptions.py`, `src/dependencies.py`, `src/constants.py`, `src/email_utils.py`.
+Utilidades: `Backend/core/exceptions.py`, `Backend/dependencies.py`, `Backend/constants.py`, `Backend/utils/email_utils.py`.
 
 ## Desarrollo local
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import Any, Optional, List
 from uuid import UUID
 from sqlmodel import Session, select
-from Backend.core.database import engine
+from Backend.core.database import get_engine
 from Backend.models.db_models import SupportCaseDB, OrderDB
 from Backend.core.exceptions import CasoNoEncontradoError
 from Backend.patterns.observer import IObservador, ObservadorEmail, ObservadorLogs
@@ -26,7 +26,7 @@ class ServicioSoporte:
         priority: str = "Medium"
     ) -> dict[str, Any]:
         
-        with Session(engine) as session:
+        with Session(get_engine()) as session:
             # 1. Validación de UserID (Obligatorio)
             try:
                 target_user_id = UUID(user_id)
@@ -70,7 +70,7 @@ class ServicioSoporte:
             }
 
     def listar_todos_casos(self) -> List[dict[str, Any]]:
-        with Session(engine) as session:
+        with Session(get_engine()) as session:
             casos = session.exec(select(SupportCaseDB).order_by(SupportCaseDB.CreatedAt.desc())).all()
             return [
                 {
@@ -85,7 +85,7 @@ class ServicioSoporte:
 
     # --- NUEVO MÉTODO: Listar casos de un usuario específico ---
     def listar_casos_usuario(self, user_id: str) -> List[dict[str, Any]]:
-        with Session(engine) as session:
+        with Session(get_engine()) as session:
             try:
                 target_id = UUID(user_id)
             except (ValueError, TypeError):
@@ -110,7 +110,7 @@ class ServicioSoporte:
             ]
 
     def cerrar_caso(self, case_id: str) -> bool:
-        with Session(engine) as session:
+        with Session(get_engine()) as session:
             try:
                 target_id = UUID(case_id)
             except (ValueError, TypeError):

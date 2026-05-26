@@ -8,7 +8,7 @@ import {
   Pricing,
   Estadisticas,
   Footer,
-} from "@/components";
+} from "@/features/landing";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
 export default function Landing() {

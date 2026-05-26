@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { publicAsset } from "@/lib/assets";
 
 /** Rutas con ancla desde la raíz para que funcionen fuera de la landing (p. ej. /registro). */
 const NAV_LINKS = [
@@ -21,7 +22,7 @@ export function Header() {
         <div className="flex items-center h-16 md:h-20 gap-3 lg:gap-5">
           <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="TrackAid inicio">
             <img
-              src="/images/logo.png"
+              src={publicAsset("images/logo.png")}
               alt="TrackAid"
               width={160}
               height={48}

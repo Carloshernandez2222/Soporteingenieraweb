@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { FLandingSection, FPatternRow } from "../layout";
+
 const STATS = [
   {
     value: "2,245,341",
@@ -77,7 +79,6 @@ export function Estadisticas() {
 
     const tick = (now: number) => {
       const progress = Math.min((now - start) / durationMs, 1);
-      // Ease-out para que termine suave.
       const eased = 1 - Math.pow(1 - progress, 3);
       setCounts(targets.map((t) => Math.round(t * eased)));
       if (progress < 1) raf = requestAnimationFrame(tick);
@@ -88,45 +89,40 @@ export function Estadisticas() {
   }, [isVisible, targets]);
 
   return (
-    <section
-      ref={sectionRef}
+    <FLandingSection
       id="funcion"
-      className="py-16 md:py-24 scroll-mt-24 md:scroll-mt-28"
+      sectionRef={sectionRef}
+      className="scroll-mt-24 md:scroll-mt-28"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-full bg-gray-850 flex items-center justify-center text-white font-bold text-sm">
-                TA
-              </div>
-              <span className="text-xl font-semibold text-gray-850">TrackAid</span>
-            </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-850">
-              Ayudando al Ecommerce
-            </h2>
-            <p className="mt-6 text-gray-600 max-w-xl">
-              El 68% de las cancelaciones en eCommerce no se originan en la
-              venta, sino en fallas operativas posteriores como retrasos
-              logísticos, errores de integración o falta de seguimiento.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-6">
+      <FPatternRow
+        visual={
+          <div className="grid grid-cols-2 gap-6 w-full max-w-lg">
             {STATS.map(({ label, icon }, idx) => (
               <div
                 key={label}
                 className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm"
               >
                 <div className="text-primary mb-3">{icon}</div>
-                <p className="text-2xl font-bold text-gray-850">
-                  {formatThousands(counts[idx] ?? 0)}
-                </p>
+                <p className="text-2xl font-bold text-gray-850">{formatThousands(counts[idx] ?? 0)}</p>
                 <p className="text-sm text-gray-600 mt-1">{label}</p>
               </div>
             ))}
           </div>
+        }
+      >
+        <div className="flex items-center gap-2 mb-4">
+          <div className="w-10 h-10 rounded-full bg-gray-850 flex items-center justify-center text-white font-bold text-sm">
+            TA
+          </div>
+          <span className="text-xl font-semibold text-gray-850">TrackAid</span>
         </div>
-      </div>
-    </section>
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-850">Ayudando al Ecommerce</h2>
+        <p className="mt-6 text-gray-600 max-w-xl">
+          El 68% de las cancelaciones en eCommerce no se originan en la venta, sino en fallas
+          operativas posteriores como retrasos logísticos, errores de integración o falta de
+          seguimiento.
+        </p>
+      </FPatternRow>
+    </FLandingSection>
   );
 }

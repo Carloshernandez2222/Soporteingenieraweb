@@ -1,5 +1,5 @@
 import { Navigate } from "react-router-dom";
-import { LoginForm, SignUpVisualPanel } from "@/components/auth";
+import { LoginForm, SignUpVisualPanel } from "@/features/auth";
 import { useAuth } from "@/context/AuthContext";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 

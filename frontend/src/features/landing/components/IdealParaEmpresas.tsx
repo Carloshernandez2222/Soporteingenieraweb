@@ -1,3 +1,5 @@
+import { FLandingSection } from "../layout";
+
 const CARDS = [
   {
     title: "Por nivel de operación",
@@ -59,31 +61,29 @@ const CARDS = [
 
 export function IdealParaEmpresas() {
   return (
-    <section id="beneficios" className="py-16 md:py-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-850 text-center">
-          Ideal para empresas que:
-        </h2>
-        <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {CARDS.map(({ title, icon, items }) => (
-            <article
-              key={title}
-              className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="text-primary mb-4">{icon}</div>
-              <h3 className="text-lg font-semibold text-gray-850 mb-4">{title}</h3>
-              <ul className="space-y-2 text-gray-600 text-sm">
-                {items.map((item) => (
-                  <li key={item} className="flex gap-2">
-                    <span className="text-primary mt-0.5">•</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
+    <FLandingSection id="beneficios">
+      <h2 className="text-2xl md:text-3xl font-bold text-gray-850 text-left max-w-2xl">
+        Ideal para empresas que:
+      </h2>
+      <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {CARDS.map(({ title, icon, items }) => (
+          <article
+            key={title}
+            className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div className="text-primary mb-4">{icon}</div>
+            <h3 className="text-lg font-semibold text-gray-850 mb-4">{title}</h3>
+            <ul className="space-y-2 text-gray-600 text-sm">
+              {items.map((item) => (
+                <li key={item} className="flex gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </article>
+        ))}
       </div>
-    </section>
+    </FLandingSection>
   );
 }
