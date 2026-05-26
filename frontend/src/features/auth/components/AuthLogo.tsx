@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { publicAsset } from "@/lib/assets";
 
 export function AuthLogo() {
   return (
@@ -8,7 +9,7 @@ export function AuthLogo() {
       aria-label="TrackAid - Ir al inicio"
     >
       <img
-        src="/images/logo.png"
+        src={publicAsset("images/logo.png")}
         alt="TrackAid"
         width={160}
         height={48}

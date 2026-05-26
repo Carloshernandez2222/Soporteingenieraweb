@@ -1,4 +1,4 @@
-from Backend.conection import obtener_conexion_sqlserver
+from Backend.utils.sqlserver import obtener_conexion_sqlserver
 
 try:
     print("Iniciando prueba de conexión...")

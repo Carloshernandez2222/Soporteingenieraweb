@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { AuthLogo } from "@/components/auth/AuthLogo";
+import { AuthLogo } from "@/features/auth";
 import { IconClipboard, IconHealth, IconSearch, IconTicket } from "@/components/Icons";
 import { useAuth } from "@/context/AuthContext";
 import { usePanelTheme } from "@/context/PanelThemeContext";

@@ -3,6 +3,9 @@ from uuid import UUID, uuid4
 from datetime import datetime
 from typing import Optional
 
+from ..constants import ROL_DEFECTO
+
+
 class PersonDB(SQLModel, table=True):
     __tablename__ = "Persons"
     PersonID: UUID = Field(default_factory=uuid4, primary_key=True)
@@ -16,6 +19,7 @@ class UserDB(SQLModel, table=True):
     Email: str = Field(unique=True, index=True)
     PasswordHash: str
     PersonID: UUID = Field(foreign_key="Persons.PersonID")
+    Rol: str = Field(default=ROL_DEFECTO, max_length=20)
     person: PersonDB = Relationship()
 
 class OrderDB(SQLModel, table=True):

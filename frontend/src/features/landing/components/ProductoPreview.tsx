@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { IconSearch, IconTicket } from "@/components/Icons";
+import { publicAsset } from "@/lib/assets";
 
 /** Panel de usuario embebido en la landing: solo presentación (spans, sin rutas). */
 function UsuarioPanelEmbed({
@@ -22,7 +23,7 @@ function UsuarioPanelEmbed({
           <div className="brand">
             <div className="brand-logo">
               <span className="inline-flex items-center">
-                <img src="/images/logo.png" alt="" width={120} height={36} className="max-h-8 w-auto object-contain" />
+                <img src={publicAsset("images/logo.png")} alt="" width={120} height={36} className="max-h-8 w-auto object-contain" />
               </span>
             </div>
             <p className="brand-tagline">Tu espacio de soporte</p>
@@ -132,7 +133,7 @@ function UsuarioPanelDemo() {
 /** Sección producto en la landing: un solo panel de usuario embebido. */
 export function ProductoPreview() {
   useEffect(() => {
-    void import("../styles/dashboard.css");
+    void import("@/styles/dashboard.css");
   }, []);
 
   return (

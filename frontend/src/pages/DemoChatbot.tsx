@@ -1,7 +1,7 @@
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { mensajeError } from "@/api";
-import { Footer, Header } from "@/components";
+import { Footer, Header } from "@/features/landing";
 import { registrarCasoStrategy } from "@/lib/panelPatronesApi";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 

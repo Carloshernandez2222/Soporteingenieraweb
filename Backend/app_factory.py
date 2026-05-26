@@ -1,8 +1,10 @@
 """
-Fábrica de la aplicación FastAPI (ensambla middleware, excepciones, routers MVC).
+Fábrica de la aplicación FastAPI (patrón Fábrica: ensambla middleware, excepciones, routers MVC).
 """
 
 import os
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .config_paths import FRONTEND_ASSETS_DIR, FRONTEND_IMAGES_DIR
+from .core.database import init_db
 from .controllers.auth_controller import router as auth_router
 from .controllers.casos_controller import router as casos_router
 from .controllers.health_controller import router as health_router
@@ -35,8 +38,14 @@ def _cors_allow_origins() -> list[str]:
     raw = os.environ.get("CORS_ORIGINS", "").strip()
     return [o.strip() for o in raw.split(",") if o.strip()] if raw else ["*"]
 
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
 def create_app() -> FastAPI:
-    app = FastAPI(title="API Soporte Técnico", version="1.0.0")
+    app = FastAPI(title="API Soporte Técnico", version="1.0.0", lifespan=_lifespan)
 
     # Static Files
     if os.path.isdir(FRONTEND_ASSETS_DIR):
