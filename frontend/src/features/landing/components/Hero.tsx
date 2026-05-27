@@ -27,12 +27,27 @@ export function Hero() {
           TrackAid monitorea y gestiona incidencias en el flujo de pedidos para evitar errores,
           retrasos y cancelaciones.
         </p>
-        <Link
-          to="/registro"
-          className="inline-block mt-8 px-8 py-4 bg-primary text-white rounded-full font-semibold hover:bg-primary-dark transition-colors"
-        >
-          Registrarse
-        </Link>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link
+            to="/registro"
+            className="inline-flex items-center justify-center px-8 py-4 bg-primary text-white rounded-full font-semibold hover:bg-primary-dark transition-colors"
+          >
+            Registrarse
+          </Link>
+          <Link
+            to="/demo"
+            className="inline-flex items-center justify-center px-8 py-4 border-2 border-primary/30 text-primary rounded-full font-semibold hover:bg-primary/5 transition-colors"
+          >
+            Probar asistente
+          </Link>
+        </div>
+        <p className="mt-4 text-sm text-gray-500">
+          También puedes chatear en la sección{" "}
+          <a href="#asistente" className="text-primary font-medium hover:underline">
+            Asistente inteligente
+          </a>
+          .
+        </p>
       </FPatternRow>
     </FLandingSection>
   );

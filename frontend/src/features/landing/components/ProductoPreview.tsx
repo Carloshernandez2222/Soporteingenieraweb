@@ -1,9 +1,11 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { ChatEmbedShell } from "@/components/chat";
 import { IconSearch, IconTicket } from "@/components/Icons";
 import { publicAsset } from "@/lib/assets";
 
-/** Panel de usuario embebido en la landing: solo presentación (spans, sin rutas). */
+type PreviewTab = "panel" | "asistente";
+
 function UsuarioPanelEmbed({
   email,
   sidebar,
@@ -23,7 +25,13 @@ function UsuarioPanelEmbed({
           <div className="brand">
             <div className="brand-logo">
               <span className="inline-flex items-center">
-                <img src={publicAsset("images/logo.png")} alt="" width={120} height={36} className="max-h-8 w-auto object-contain" />
+                <img
+                  src={publicAsset("images/logo.png")}
+                  alt=""
+                  width={120}
+                  height={36}
+                  className="max-h-8 w-auto object-contain"
+                />
               </span>
             </div>
             <p className="brand-tagline">Tu espacio de soporte</p>
@@ -37,7 +45,7 @@ function UsuarioPanelEmbed({
           <nav className="embed-nav" aria-hidden>
             {sidebar}
           </nav>
-          <p className="embed-panel-footnote">Solo demostración visual en la web pública.</p>
+          <p className="embed-panel-footnote">Vista de demostración · datos ficticios</p>
         </aside>
         <main className="main-area product-mock-main">{children}</main>
       </div>
@@ -82,17 +90,17 @@ function UsuarioPanelDemo() {
         <div className="embed-panel-card">
           <p className="embed-panel-hint">Paso 1</p>
           <p className="embed-card-title">Nueva incidencia</p>
-          <p className="embed-card-desc">Cuéntanos el problema; te respondemos por correo.</p>
+          <p className="embed-card-desc">Formulario guiado con validación.</p>
         </div>
         <div className="embed-panel-card">
           <p className="embed-panel-hint">Paso 2</p>
           <p className="embed-card-title">Seguimiento</p>
-          <p className="embed-card-desc">Busca con tu correo y nombre para ver el estado.</p>
+          <p className="embed-card-desc">Busca por correo el estado de tus envíos.</p>
         </div>
         <div className="embed-panel-card">
           <p className="embed-panel-hint">Actividad</p>
-          <p className="embed-card-title">Tus últimos envíos</p>
-          <p className="embed-card-desc">En la app real verás aquí el listado actualizado.</p>
+          <p className="embed-card-title">Historial</p>
+          <p className="embed-card-desc">Listado actualizado en tiempo real.</p>
         </div>
       </div>
 
@@ -118,8 +126,7 @@ function UsuarioPanelDemo() {
           <div className="embed-mock-field">
             <span className="embed-mock-label">Descripción del problema</span>
             <div className="embed-mock-textarea">
-              El pedido #4582 aparece como entregado en el marketplace pero el cliente no recibió el paquete. Adjunto
-              número de guía y captura del estado en la tienda.
+              El pedido #4582 aparece como entregado pero el cliente no recibió el paquete.
             </div>
             <span className="embed-mock-meta">142 / 4000</span>
           </div>
@@ -130,8 +137,9 @@ function UsuarioPanelDemo() {
   );
 }
 
-/** Sección producto en la landing: un solo panel de usuario embebido. */
 export function ProductoPreview() {
+  const [tab, setTab] = useState<PreviewTab>("panel");
+
   useEffect(() => {
     void import("@/styles/dashboard.css");
   }, []);
@@ -143,21 +151,62 @@ export function ProductoPreview() {
       aria-labelledby="producto-heading"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mb-10 md:mb-12">
+        <div className="max-w-2xl mb-8 md:mb-10">
           <h2 id="producto-heading" className="text-2xl md:text-3xl font-bold text-gray-850 tracking-tight">
-            Tu panel como usuario
+            Así se ve TrackAid en uso
           </h2>
           <p className="mt-4 text-gray-600 leading-relaxed">
-            Vista embebida con datos de ejemplo. No es la sesión real; al{" "}
+            Explora el <strong>panel de usuario</strong> o prueba el <strong>asistente</strong> en vivo.
+            Al{" "}
             <Link to="/registro" className="text-primary font-medium hover:underline">
               crear cuenta
             </Link>{" "}
-            usas TrackAid con tus datos.
+            accedes con tus datos reales.
           </p>
         </div>
 
-        <div className="min-w-0">
-          <UsuarioPanelDemo />
+        <div className="product-preview-tabs lg:hidden" role="tablist" aria-label="Vista del producto">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "panel"}
+            className={`product-preview-tab ${tab === "panel" ? "product-preview-tab--active" : ""}`}
+            onClick={() => setTab("panel")}
+          >
+            Panel de usuario
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "asistente"}
+            className={`product-preview-tab ${tab === "asistente" ? "product-preview-tab--active" : ""}`}
+            onClick={() => setTab("asistente")}
+          >
+            Asistente (interactivo)
+          </button>
+        </div>
+
+        <div className="hidden lg:grid product-preview-dual">
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Panel web</p>
+            <UsuarioPanelDemo />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+              Asistente · puedes escribir aquí
+            </p>
+            <ChatEmbedShell variant="compact" showFooter={false} subtitle="Demo en vivo" />
+          </div>
+        </div>
+
+        <div className="min-w-0 lg:hidden" role="tabpanel">
+          {tab === "panel" ? (
+            <UsuarioPanelDemo />
+          ) : (
+            <div className="max-w-lg mx-auto">
+              <ChatEmbedShell variant="compact" subtitle="Prueba aquí · Registro real" />
+            </div>
+          )}
         </div>
       </div>
     </section>

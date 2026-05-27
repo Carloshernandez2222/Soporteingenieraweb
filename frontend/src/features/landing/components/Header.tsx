@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { href: "/#servicios", label: "Servicios" },
   { href: "/#funcion", label: "Función" },
   { href: "/#producto", label: "Producto" },
+  { href: "/#asistente", label: "Asistente" },
   { href: "/#beneficios", label: "Beneficios" },
   { href: "/#precios", label: "Precios" },
 ] as const;

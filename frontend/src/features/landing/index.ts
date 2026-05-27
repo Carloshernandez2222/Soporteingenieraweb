@@ -4,6 +4,7 @@ export { Hero } from "./components/Hero";
 export { PotencialesClientes } from "./components/PotencialesClientes";
 export { IdealParaEmpresas } from "./components/IdealParaEmpresas";
 export { CasoExito } from "./components/CasoExito";
+export { ChatbotShowcase } from "./components/ChatbotShowcase";
 export { ProductoPreview } from "./components/ProductoPreview";
 export { Pricing } from "./components/Pricing";
 export { Estadisticas } from "./components/Estadisticas";

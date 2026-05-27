@@ -5,6 +5,7 @@ import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import { PanelThemeProvider } from "./context/PanelThemeContext";
 import "./styles/tailwind.css";
+import "./styles/chat.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

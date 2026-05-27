@@ -3,6 +3,7 @@ import {
   Hero,
   PotencialesClientes,
   IdealParaEmpresas,
+  ChatbotShowcase,
   CasoExito,
   ProductoPreview,
   Pricing,
@@ -19,6 +20,7 @@ export default function Landing() {
       <Hero />
       <PotencialesClientes />
       <IdealParaEmpresas />
+      <ChatbotShowcase />
       <CasoExito />
       <ProductoPreview />
       <Pricing />
