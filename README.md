@@ -16,10 +16,21 @@ Utilidades: `Backend/core/`, `Backend/dependencies.py`, `Backend/constants.py`, 
 
 ## Desarrollo local
 
+### GitHub Codespace (recomendado, un solo comando)
+
 ```bash
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+bash scripts/codespace-setup.sh
+```
+
+Instala **ODBC Driver 18**, crea `.venv`, levanta SQL Server con Docker y aplica `schema.sql`.
+
+### Manual
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-pip install -r requirements-dev.txt   # opcional: tests
+# Linux: driver ODBC (obligatorio para SQL Server)
+sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
 
 # Backend (desde la raíz del repo)
 uvicorn Backend.conection:test --reload --host 127.0.0.1 --port 8000

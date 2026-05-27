@@ -12,3 +12,9 @@ try:
     conn.close()
 except Exception as e:
     print(f"\n❌ Error de conexión:\n{str(e)}")
+    if "ODBC Driver 18" in str(e) and "file not found" in str(e):
+        print(
+            "\n→ Falta el driver del sistema (no basta con pip install pyodbc).\n"
+            "  En Codespace ejecute:  bash scripts/codespace-setup.sh\n"
+            "  O manualmente:         sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18"
+        )
