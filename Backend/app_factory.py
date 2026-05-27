@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
+from sqlalchemy.exc import SQLAlchemyError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -48,15 +49,22 @@ async def _lifespan(app: FastAPI):
     except Exception as exc:
         logging.getLogger("trackaid").warning("init_db omitido: %s", exc)
 
+    log = logging.getLogger("trackaid")
+    try:
+        from .core.database import create_database_url
+
+        url = create_database_url()
+        log.info("Base de datos: %s", url.split("@")[-1] if "@" in url else url)
+    except Exception:
+        pass
+
     if os.environ.get("SKIP_DB_SEED", "").lower() not in ("1", "true", "yes"):
         try:
             from .core.seed import ejecutar_seed_demo
 
             ejecutar_seed_demo()
         except Exception as exc:
-            logging.getLogger("trackaid").warning(
-                "Seed de usuarios demo omitido (revise SQL Server): %s", exc
-            )
+            log.warning("Seed de usuarios demo omitido (revise SQL Server / .env): %s", exc)
     yield
 
 
@@ -89,6 +97,25 @@ def create_app() -> FastAPI:
     @app.exception_handler(InvalidCredentialsError)
     async def invalid_creds(request, exc):
         return JSONResponse(status_code=401, content={"code": "INVALID_CREDENTIALS", "message": "Credenciales incorrectas."})
+
+    @app.exception_handler(CorreoInvalidoError)
+    async def correo_invalido_handler(request: Request, exc: CorreoInvalidoError):
+        return JSONResponse(status_code=400, content={"code": "INVALID_EMAIL", "message": str(exc)})
+
+    @app.exception_handler(SQLAlchemyError)
+    async def database_error_handler(request: Request, exc: SQLAlchemyError):
+        logging.getLogger("trackaid").exception("Error de base de datos")
+        return JSONResponse(
+            status_code=503,
+            content={
+                "code": "DATABASE_ERROR",
+                "message": (
+                    "No se pudo acceder a la base de datos. "
+                    "En Codespace: docker compose up -d, bash scripts/codespace-init-db.sh "
+                    "y SQLSERVER_PASSWORD en .env (ver README)."
+                ),
+            },
+        )
 
     @app.exception_handler(ValueError)
     async def value_error_handler(request: Request, exc: ValueError):

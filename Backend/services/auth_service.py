@@ -31,6 +31,22 @@ def _verify_password(password: str, stored: str) -> bool:
     except ValueError:
         return False
 
+def _usuario_a_dict(session: Session, user: UserDB) -> dict[str, Any]:
+    """DTO para el frontend (incluye nombre, apellidos y rol)."""
+    persona = session.get(PersonDB, user.PersonID)
+    try:
+        rol = obtener_rol_usuario(session, user.UserID)
+    except Exception:
+        rol = ROL_DEFECTO
+    return {
+        "id": str(user.UserID),
+        "email": user.Email,
+        "nombre": persona.FirstName if persona else "",
+        "apellidos": persona.LastName if persona else "",
+        "rol": rol,
+    }
+
+
 class ServicioAuth:
     """Servicio de autenticación relacional (Persons + Users) con persistencia en SQL Server."""
 
@@ -62,11 +78,7 @@ class ServicioAuth:
             session.commit()
             session.refresh(nuevo_usuario)
 
-            return {
-                "id": str(nuevo_usuario.UserID),
-                "email": nuevo_usuario.Email,
-                "rol": ROL_DEFECTO,
-            }
+            return _usuario_a_dict(session, nuevo_usuario)
 
     def login(self, email: str, password: str) -> dict[str, Any]:
         email_norm = validar_y_normalizar_correo(email)
@@ -79,13 +91,7 @@ class ServicioAuth:
             if not _verify_password(password, user.PasswordHash):
                 raise InvalidCredentialsError()
 
-            rol = obtener_rol_usuario(session, user.UserID)
-
-            return {
-                "id": str(user.UserID),
-                "email": user.Email,
-                "rol": rol,
-            }
+            return _usuario_a_dict(session, user)
 
     def crear_token_reset(self, email: str) -> str:
         with Session(get_engine()) as session:
