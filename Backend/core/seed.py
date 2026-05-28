@@ -14,12 +14,18 @@ from sqlmodel import Session, select
 
 from Backend.constants import ROLES_USUARIO, ROL_DEFECTO, normalizar_rol
 from Backend.core.database import get_engine
-from Backend.models.db_models import PersonDB, RoleDB, UserDB, UserRoleDB
+from Backend.models.db_models import CompanyDB, PersonDB, RoleDB, UserDB, UserRoleDB
 from Backend.services.auth_service import _hash_password
+from Backend.services.company_service import ServicioCompany, normalizar_company_key
 
 logger = logging.getLogger("trackaid.seed")
 
 DEMO_PASSWORD = "TrackAid2026!"
+
+DEMO_COMPANIES: list[dict[str, str]] = [
+    {"nombre": "TrackAid Demo", "llave": "trackaid-demo"},
+    {"nombre": "Acme Retail", "llave": "acme-retail"},
+]
 
 DEMO_USERS: list[dict[str, str]] = [
     {
@@ -75,9 +81,26 @@ def ejecutar_seed_demo() -> None:
         roles_map = _asegurar_roles(session)
         session.commit()
 
+    company_svc = ServicioCompany()
+
     with Session(engine) as session:
         roles_map = _asegurar_roles(session)
         password_hash = _hash_password(DEMO_PASSWORD)
+
+        companies_by_key: dict[str, CompanyDB] = {}
+        for spec in DEMO_COMPANIES:
+            key = normalizar_company_key(spec["llave"])
+            company = session.exec(select(CompanyDB).where(CompanyDB.CompanyKey == key)).first()
+            if not company:
+                company = CompanyDB(
+                    CompanyName=spec["nombre"],
+                    CompanyKey=key,
+                    IsActive=True,
+                )
+                session.add(company)
+                session.flush()
+                logger.info("Compañía demo creada: %s (%s)", spec["nombre"], key)
+            companies_by_key[key] = company
 
         for spec in DEMO_USERS:
             email = spec["email"].strip().lower()
@@ -103,6 +126,10 @@ def ejecutar_seed_demo() -> None:
                 logger.debug("Usuario demo actualizado (contraseña): %s", email)
 
             _asignar_rol(session, user.UserID, spec["rol"], roles_map)
+
+            demo_company = companies_by_key.get(normalizar_company_key("trackaid-demo"))
+            if demo_company:
+                company_svc.vincular_usuario(session, user.UserID, demo_company)
 
         session.commit()
 

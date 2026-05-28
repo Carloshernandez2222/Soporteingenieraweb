@@ -2,6 +2,7 @@
  * Cliente TrackAid (FastAPI auth). En dev, rutas relativas /api/* pasan por el proxy de Vite.
  */
 
+import { authHeaders } from "./authToken";
 import type { RolUsuario } from "./roles";
 
 const getBaseUrl = () =>
@@ -21,6 +22,7 @@ async function request<T>(
   const url = `${getBaseUrl()}${path}`;
   const headers: HeadersInit = {
     "Content-Type": "application/json",
+    ...authHeaders(),
     ...rest.headers,
   };
   try {
@@ -55,6 +57,7 @@ export interface RegisterBody {
   nombre: string;
   apellidos: string;
   email: string;
+  companyKey: string;
   password: string;
   confirmPassword: string;
   acceptTerms: boolean;
@@ -65,14 +68,19 @@ export interface UserResponse {
   nombre: string;
   apellidos: string;
   email: string;
-  /** `webmaster` | `soporte` | `usuario` — en SQLite; actualizado al volver a iniciar sesión. */
   rol: RolUsuario;
+  companyId?: string | null;
+  companyName?: string | null;
+  companyKey?: string | null;
 }
 
-export interface RegisterResponse {
+export interface AuthSessionResponse {
   success: boolean;
   user: UserResponse;
+  accessToken: string;
 }
+
+export interface RegisterResponse extends AuthSessionResponse {}
 
 export function register(body: RegisterBody) {
   return request<RegisterResponse>("/api/auth/register", { method: "POST", body });
@@ -83,10 +91,7 @@ export interface LoginBody {
   password: string;
 }
 
-export interface LoginResponse {
-  success: boolean;
-  user: UserResponse;
-}
+export interface LoginResponse extends AuthSessionResponse {}
 
 export function login(body: LoginBody) {
   return request<LoginResponse>("/api/auth/login", { method: "POST", body });
@@ -120,4 +125,80 @@ export interface ResetPasswordResponse {
 
 export function resetPassword(body: ResetPasswordBody) {
   return request<ResetPasswordResponse>("/api/auth/reset-password", { method: "POST", body });
+}
+
+export interface CompanyItem {
+  id: string;
+  nombre: string;
+  llave: string;
+  activa: boolean;
+  creadaEn?: string | null;
+}
+
+export function listCompaniesActivas() {
+  return request<{ success: boolean; data: CompanyItem[] }>("/api/companies/activas");
+}
+
+export function listCompaniesAll() {
+  return request<{ success: boolean; data: CompanyItem[] }>("/api/companies");
+}
+
+export function createCompany(body: { nombre: string; llave: string }) {
+  return request<{ success: boolean; data: CompanyItem }>("/api/companies", {
+    method: "POST",
+    body,
+  });
+}
+
+export function setCompanyActive(companyId: string, activa: boolean) {
+  return request<{ success: boolean; data: CompanyItem }>(
+    `/api/companies/${companyId}/activa`,
+    { method: "PATCH", body: { activa } }
+  );
+}
+
+export function listAdminUsers() {
+  return request<{ success: boolean; data: UserResponse[] }>("/api/admin/usuarios");
+}
+
+export function createAdminUser(body: {
+  nombre: string;
+  apellidos: string;
+  email: string;
+  password: string;
+  rol: string;
+  companyId?: string | null;
+}) {
+  return request<{ success: boolean; user: UserResponse }>("/api/admin/usuarios", {
+    method: "POST",
+    body,
+  });
+}
+
+export function updateAdminUserRole(userId: string, rol: string) {
+  return request<{ success: boolean; user: UserResponse }>(
+    `/api/admin/usuarios/${userId}/rol`,
+    { method: "PATCH", body: { rol } }
+  );
+}
+
+export function updateAdminUserPassword(userId: string, password: string) {
+  return request<{ success: boolean; message: string }>(
+    `/api/admin/usuarios/${userId}/password`,
+    { method: "PATCH", body: { password } }
+  );
+}
+
+export function assignAdminUserCompany(userId: string, companyId: string) {
+  return request<{ success: boolean; user: UserResponse }>(
+    `/api/admin/usuarios/${userId}/compania`,
+    { method: "PATCH", body: { companyId } }
+  );
+}
+
+export function setAdminUserActive(userId: string, activa: boolean) {
+  return request<{ success: boolean; user: UserResponse }>(
+    `/api/admin/usuarios/${userId}/activo`,
+    { method: "PATCH", body: { activa } }
+  );
 }

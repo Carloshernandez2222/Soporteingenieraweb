@@ -1,10 +1,14 @@
 from typing import Any, Optional
 from fastapi import APIRouter, Body, HTTPException, Query, status, Depends
 from pydantic import BaseModel
-from ..dependencies import get_servicio_registro_sqlite, get_servicio_soporte, get_servicio_taller
+from ..dependencies import get_servicio_admin, get_servicio_registro_sqlite, get_servicio_soporte, get_servicio_taller
+from ..core.auth_deps import CurrentUser, get_current_user, require_roles
 from ..core.exceptions import CasoNoEncontradoError
 from ..models import CasoSoporte
+from ..models.admin_schemas import CaseAssignBody, CaseStatusBody
 from ..patterns.adapter import obtener_adaptador
+
+_soporte_o_web = Depends(require_roles("soporte", "webmaster"))
 
 router = APIRouter(prefix="/api/casos", tags=["casos"])
 
@@ -57,9 +61,64 @@ def api_registrar_soporte(
     )
     return {"status": "success", "data": resultado}
 
-@router.get("/soporte", summary="Listar todos los tickets")
-def api_listar_soporte():
-    return {"status": "success", "data": get_servicio_soporte().listar_todos_casos()}
+@router.get(
+    "/soporte",
+    summary="Listar todas las solicitudes (soporte / webmaster)",
+    dependencies=[_soporte_o_web],
+)
+def api_listar_soporte(servicio_soporte=Depends(get_servicio_soporte)):
+    return {"status": "success", "data": servicio_soporte.listar_todos_casos()}
+
+
+@router.get(
+    "/soporte/agentes",
+    summary="Usuarios disponibles para asignación",
+    dependencies=[_soporte_o_web],
+)
+def api_agentes_soporte(svc=Depends(get_servicio_admin)):
+    users = svc.listar_usuarios()
+    agentes = [u for u in users if u.get("rol") in ("soporte", "webmaster")]
+    return {"status": "success", "data": agentes}
+
+
+@router.patch(
+    "/soporte/{case_id}/asignar",
+    summary="Asignar solicitud a un agente",
+    dependencies=[_soporte_o_web],
+)
+def api_asignar_caso(
+    case_id: str,
+    body: CaseAssignBody,
+    servicio_soporte=Depends(get_servicio_soporte),
+):
+    data = servicio_soporte.asignar_caso(case_id, body.assignedToUserId)
+    return {"status": "success", "data": data}
+
+
+@router.patch(
+    "/soporte/{case_id}/estado",
+    summary="Actualizar estado y comentario",
+    dependencies=[_soporte_o_web],
+)
+def api_estado_caso(
+    case_id: str,
+    body: CaseStatusBody,
+    user: CurrentUser = Depends(get_current_user),
+    servicio_soporte=Depends(get_servicio_soporte),
+):
+    data = servicio_soporte.actualizar_estado(
+        case_id, body.status, body.comentario, user.id
+    )
+    return {"status": "success", "data": data}
+
+
+@router.get(
+    "/soporte/{case_id}/historial",
+    summary="Historial de una solicitud",
+    dependencies=[_soporte_o_web],
+)
+def api_historial_caso(case_id: str, servicio_soporte=Depends(get_servicio_soporte)):
+    return {"status": "success", "data": servicio_soporte.historial_caso(case_id)}
 
 # --- NUEVO ENDPOINT: Listar tickets de un usuario ---
 @router.get("/soporte/mis-tickets/{user_id}", summary="Listar tickets de un usuario")

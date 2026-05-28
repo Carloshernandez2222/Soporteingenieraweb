@@ -19,6 +19,23 @@ class UserDB(SQLModel, table=True):
     person: PersonDB = Relationship()
 
 
+class CompanyDB(SQLModel, table=True):
+    __tablename__ = "Companies"
+    CompanyID: UUID = Field(default_factory=uuid4, primary_key=True)
+    CompanyName: str
+    CompanyKey: str = Field(unique=True, index=True)
+    IsActive: bool = Field(default=True)
+    CreatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+
+class UserCompanyDB(SQLModel, table=True):
+    __tablename__ = "UserCompanies"
+    UserID: UUID = Field(foreign_key="Users.UserID", primary_key=True)
+    CompanyID: UUID = Field(foreign_key="Companies.CompanyID", primary_key=True)
+    IsPrimary: bool = Field(default=True)
+    IsActive: bool = Field(default=True)
+
+
 class RoleDB(SQLModel, table=True):
     __tablename__ = "Roles"
     RoleID: UUID = Field(default_factory=uuid4, primary_key=True)
@@ -45,8 +62,22 @@ class SupportCaseDB(SQLModel, table=True):
     CaseID: UUID = Field(default_factory=uuid4, primary_key=True)
     OrderID: Optional[UUID] = Field(default=None, foreign_key="Orders.OrderID")
     UserID: UUID = Field(foreign_key="Users.UserID")
+    CompanyID: Optional[UUID] = Field(default=None, foreign_key="Companies.CompanyID")
+    AssignedTo: Optional[UUID] = Field(default=None, foreign_key="Users.UserID")
     Description: Optional[str] = Field(default=None)
     CaseType: str
     Status: str = "Open"
     Priority: str = "Medium"
+    IsActive: bool = Field(default=True)
     CreatedAt: datetime = Field(default_factory=datetime.utcnow)
+
+
+class CaseHistoryDB(SQLModel, table=True):
+    __tablename__ = "CaseHistory"
+    LogID: UUID = Field(default_factory=uuid4, primary_key=True)
+    CaseID: UUID = Field(foreign_key="SupportCases.CaseID")
+    Status: str
+    Comment: Optional[str] = Field(default=None)
+    UpdatedBy: UUID = Field(foreign_key="Users.UserID")
+    IsActive: bool = Field(default=True)
+    UpdatedAt: datetime = Field(default_factory=datetime.utcnow)

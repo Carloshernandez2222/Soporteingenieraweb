@@ -39,6 +39,12 @@ export default function DashboardLayout() {
           <div className="sidebar-user" style={{ padding: "0 0.35rem" }}>
             <p className="hint" style={{ margin: "0 0 0.5rem", fontSize: "0.8rem" }}>
               {user.email}
+              {user.companyName ? (
+                <>
+                  <br />
+                  <span>{user.companyName}</span>
+                </>
+              ) : null}
             </p>
             <p
               className="sidebar-role"
@@ -184,10 +190,18 @@ export default function DashboardLayout() {
 
           {rol === "webmaster" && (
             <div className="nav-section">
-              <div className="nav-label">Tickets globales</div>
+              <div className="nav-label">Administración</div>
               <NavLink to="/panel/tickets" className={navCls}>
                 <IconTicket size={18} />
-                Todos los tickets
+                Todas las solicitudes
+              </NavLink>
+              <NavLink to="/panel/admin/companias" className={navCls}>
+                <IconClipboard size={18} />
+                Compañías
+              </NavLink>
+              <NavLink to="/panel/admin/usuarios" className={navCls}>
+                <IconClipboard size={18} />
+                Usuarios
               </NavLink>
             </div>
           )}

@@ -70,7 +70,7 @@ export function LoginForm() {
       return;
     }
     if (data?.success && data.user) {
-      setUser(data.user);
+      setUser(data.user, data.accessToken);
       navigate(destinoTrasLogin(location.state), { replace: true });
     }
   }

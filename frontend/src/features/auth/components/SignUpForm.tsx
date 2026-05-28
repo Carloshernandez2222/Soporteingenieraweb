@@ -11,6 +11,7 @@ export function SignUpForm() {
   const { setUser } = useAuth();
   const [nombre, setNombre] = useState("");
   const [apellidos, setApellidos] = useState("");
+  const [companyKey, setCompanyKey] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,6 +21,13 @@ export function SignUpForm() {
   const [globalError, setGlobalError] = useState("");
   const [sugerirLogin, setSugerirLogin] = useState(false);
   const currentYear = new Date().getFullYear();
+
+  function generarLlaveSegura() {
+    const arr = new Uint8Array(12);
+    crypto.getRandomValues(arr);
+    const raw = Array.from(arr, (n) => n.toString(16).padStart(2, "0")).join("");
+    setCompanyKey(`trk-${raw.slice(0, 20)}`);
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -31,6 +39,7 @@ export function SignUpForm() {
       nombre: nombre.trim(),
       apellidos: apellidos.trim(),
       email: email.trim(),
+      companyKey: companyKey.trim(),
       password,
       confirmPassword,
       acceptTerms: acceptedTerms,
@@ -48,7 +57,7 @@ export function SignUpForm() {
       return;
     }
     if (data?.success && data.user) {
-      setUser(data.user);
+      setUser(data.user, data.accessToken);
       navigate("/panel", { replace: true });
     }
   }
@@ -103,6 +112,28 @@ export function SignUpForm() {
           />
         </div>
         <InputField
+          label="Llave privada de compañía"
+          id="companyKey"
+          name="companyKey"
+          placeholder="trk-xxxxxxxxxxxxxxxxxxxx"
+          value={companyKey}
+          error={errors.companyKey}
+          onChange={(e) => setCompanyKey(e.target.value)}
+          required
+        />
+        <div className="-mt-2 flex items-center justify-between gap-2">
+          <p className="text-xs text-gray-500">
+            Solo se usa la llave. No se solicita nombre de empresa para proteger su privacidad.
+          </p>
+          <button
+            type="button"
+            onClick={generarLlaveSegura}
+            className="text-xs rounded-md border border-teal-200 px-2 py-1 text-teal-700 hover:bg-teal-50"
+          >
+            Generar llave
+          </button>
+        </div>
+        <InputField
           label="Correo"
           id="email"
           name="email"
@@ -142,6 +173,8 @@ export function SignUpForm() {
         <CheckboxWithLinks
           id="terms"
           label="Acepto los"
+          termsHref="/terminos-y-condiciones"
+          privacyHref="/politica-de-privacidad"
           checked={acceptedTerms}
           onChange={(e) => setAcceptedTerms(e.target.checked)}
           required
