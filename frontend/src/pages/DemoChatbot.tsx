@@ -13,14 +13,13 @@ export default function DemoChatbot() {
         <div className="max-w-3xl w-full mx-auto flex flex-col flex-1 min-h-0">
           <div className="mb-6 text-center sm:text-left">
             <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-2">
-              Asistente con backend real
+              Asistente en vivo
             </p>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-850 tracking-tight">
               Prueba el chat de soporte
             </h1>
             <p className="mt-2 text-sm text-gray-600 max-w-xl">
-              Registra tickets de demostración con el patrón <strong>Strategy</strong> (origen chatbot).
-              Incluye tu correo en el mensaje o usa «Registrar ejemplo».
+              Cuéntanos tu problema con tu correo de contacto y el asistente te ayuda a crear tu caso.
             </p>
             <Link
               to="/"
@@ -34,9 +33,7 @@ export default function DemoChatbot() {
             <ChatEmbedShell variant="full" showFooter={false} />
           </div>
 
-          <p className="mt-4 text-center text-xs text-gray-500">
-            Endpoint: <code className="text-[0.7rem] bg-gray-100 px-1 py-0.5 rounded">POST /registrar?origen=chatbot</code>
-          </p>
+          <p className="mt-4 text-center text-xs text-gray-500">Demo orientada a usuarios finales.</p>
         </div>
       </main>
       <Footer />

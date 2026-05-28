@@ -19,9 +19,11 @@ export function FPatternRow({ children, visual, reverse = false, className = "" 
   const visualOrder = reverse ? "order-1 lg:order-1" : "order-1 lg:order-2";
 
   return (
-    <div className={`flex flex-col lg:flex-row gap-12 lg:gap-16 items-center ${className}`.trim()}>
-      <div className={`flex-1 min-w-0 ${contentOrder}`}>{children}</div>
-      <div className={`flex-shrink-0 w-full lg:w-auto flex justify-center lg:justify-end ${visualOrder}`}>
+    <div className={`flex flex-col lg:flex-row gap-8 sm:gap-10 lg:gap-16 items-stretch lg:items-center ${className}`.trim()}>
+      <div className={`flex-1 w-full min-w-0 max-w-2xl mx-auto lg:mx-0 ${contentOrder}`}>{children}</div>
+      <div
+        className={`flex-shrink-0 w-full lg:w-auto max-w-2xl mx-auto lg:max-w-none lg:mx-0 flex justify-center lg:justify-end ${visualOrder}`}
+      >
         {visual}
       </div>
     </div>

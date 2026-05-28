@@ -6,6 +6,7 @@ type ChatEmbedShellProps = {
   showFooter?: boolean;
   title?: string;
   subtitle?: string;
+  storageKey?: string;
 };
 
 export function ChatEmbedShell({
@@ -13,6 +14,7 @@ export function ChatEmbedShell({
   showFooter = true,
   title = "TrackAid Assistant",
   subtitle = "En línea · Demo interactiva",
+  storageKey,
 }: ChatEmbedShellProps) {
   const shellClass =
     variant === "full" ? "chat-embed-shell chat-embed-shell--full" : "chat-embed-shell chat-embed-shell--compact";
@@ -32,7 +34,7 @@ export function ChatEmbedShell({
         </div>
         <span className="chat-embed-badge">IA demo</span>
       </header>
-      <ChatWidget bare />
+      <ChatWidget bare storageKey={storageKey} />
       {showFooter && (
         <p className="chat-embed-footer m-0">
           ¿Quieres pantalla completa?{" "}

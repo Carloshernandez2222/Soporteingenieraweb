@@ -306,18 +306,40 @@ html {
     width: 100%;
     border-right: none;
     border-bottom: 1px solid var(--border);
-    padding-bottom: 1rem;
+    padding: 1rem 0.85rem 0.95rem;
+    gap: 0.9rem;
   }
   .nav-section {
-    flex-flow: row wrap;
+    flex-direction: column;
+    gap: 0.25rem;
   }
   .nav-label {
     width: 100%;
+    padding-left: 0.35rem;
   }
   .nav-link {
-    flex: 1;
-    min-width: 120px;
-    justify-content: center;
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
+  }
+  .main-area {
+    max-width: none;
+    width: 100%;
+    padding: 1rem 0.85rem 1.6rem;
+  }
+  .page-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.2rem;
+  }
+  .page-header-meta {
+    width: 100%;
+  }
+  .row-flex .field {
+    min-width: 100%;
+  }
+  .panel-theme .table-wrap {
+    overflow-x: auto;
   }
 }
 
@@ -840,7 +862,7 @@ pre.json {
 
 /* Embed landing: solo tema claro, superficies planas y jerarquía clara */
 .product-mock-embed .panel-theme.panel-theme--light.app-shell.product-mock-shell {
-  background: #eceaf3;
+  background: #f4f2f8;
   background-image: none;
 }
 .product-mock-embed .panel-theme.panel-theme--light .product-mock-sidebar.sidebar {
@@ -849,27 +871,27 @@ pre.json {
   box-shadow: 4px 0 20px rgba(74, 61, 114, 0.05);
 }
 .product-mock-embed .panel-theme.panel-theme--light .product-mock-main.main-area {
-  background: #fbfbfe;
+  background: #ffffff;
 }
 .product-mock-embed .embed-sidebar-user {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  padding: 0 0.35rem;
+  padding: 0 0.45rem;
 }
 .product-mock-embed .embed-sidebar-label {
   margin: 0;
-  font-size: 0.65rem;
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  color: #8a8498;
+  color: #726c83;
 }
 .product-mock-embed .embed-sidebar-email {
   margin: 0;
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: #3d3556;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #2f2942;
   word-break: break-all;
 }
 .product-mock-embed .embed-user-badge {
@@ -884,8 +906,8 @@ pre.json {
 .product-mock-embed .embed-signout-btn {
   width: 100%;
   margin-top: 0.15rem;
-  font-size: 0.82rem !important;
-  padding: 0.5rem 0.75rem !important;
+  font-size: 0.86rem !important;
+  padding: 0.58rem 0.78rem !important;
   box-shadow: none !important;
   border: 1px solid rgba(91, 75, 138, 0.18) !important;
   background: #faf9fc !important;
@@ -925,22 +947,22 @@ pre.json {
   margin-top: auto;
   padding-top: 1rem;
   border-top: 1px solid rgba(91, 75, 138, 0.1);
-  font-size: 0.7rem;
+  font-size: 0.76rem;
   line-height: 1.45;
-  color: #9a94a8;
+  color: #7f788f;
 }
 .product-mock-embed .embed-page-header {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 .product-mock-embed .embed-page-header .page-title {
-  font-size: 1.45rem;
+  font-size: 1.75rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #2d2d2d;
+  color: #262134;
 }
 .product-mock-embed .embed-page-header .page-subtitle {
-  font-size: 0.94rem;
-  color: #5c556b;
+  font-size: 1rem;
+  color: #4f4960;
   line-height: 1.5;
 }
 .product-mock-embed .embed-cards-grid {
@@ -962,7 +984,7 @@ pre.json {
   background: #ffffff;
   border: 1px solid rgba(91, 75, 138, 0.12);
   border-radius: 14px;
-  padding: 1rem 1.1rem;
+  padding: 1.05rem 1.15rem;
   box-shadow: 0 2px 10px rgba(45, 45, 45, 0.04);
   transition:
     border-color 0.2s ease,
@@ -983,15 +1005,15 @@ pre.json {
 }
 .product-mock-embed .embed-card-title {
   margin: 0;
-  font-size: 0.98rem;
+  font-size: 1.08rem;
   font-weight: 600;
-  color: #2d2d2d;
+  color: #292338;
 }
 .product-mock-embed .embed-card-desc {
   margin: 0.45rem 0 0;
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   line-height: 1.45;
-  color: #6b6580;
+  color: #5a546c;
 }
 
 /* Vista previa del formulario «Crear ticket» (sin inputs reales) */
@@ -1019,7 +1041,7 @@ pre.json {
 }
 .product-mock-embed .embed-form-section-title {
   margin: 0;
-  font-size: 1.12rem;
+  font-size: 1.26rem;
   font-weight: 700;
   color: #2d2d2d;
   letter-spacing: -0.02em;
@@ -1039,7 +1061,7 @@ pre.json {
 }
 .product-mock-embed .embed-mock-label {
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -1050,7 +1072,7 @@ pre.json {
 .product-mock-embed .embed-mock-textarea {
   display: block;
   width: 100%;
-  font-size: 0.9rem;
+  font-size: 0.96rem;
   line-height: 1.45;
   color: #3d3556;
   background: #f6f5f9;
@@ -1065,8 +1087,8 @@ pre.json {
 }
 .product-mock-embed .embed-mock-hint {
   margin: 0.4rem 0 0;
-  font-size: 0.78rem;
-  color: #8a8498;
+  font-size: 0.82rem;
+  color: #736d86;
   line-height: 1.4;
 }
 .product-mock-embed .embed-mock-meta {
@@ -1100,17 +1122,95 @@ pre.json {
   }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1023px) {
   .panel-theme.app-shell.product-mock-shell {
-    flex-direction: row;
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    flex-direction: column;
+    overflow: visible;
   }
-  .product-mock-shell .product-mock-sidebar.sidebar {
-    width: 200px;
-    border-bottom: none;
-    border-right: 1px solid var(--border);
-  }
+
+  .product-mock-shell .product-mock-sidebar.sidebar,
   .product-mock-embed .product-mock-sidebar.sidebar {
-    width: 200px;
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding: 0.8rem 0.75rem;
+    overflow: visible;
+  }
+
+  .product-mock-embed .embed-nav {
+    gap: 0.2rem;
+  }
+
+  .product-mock-embed .embed-nav .nav-link {
+    justify-content: flex-start;
+    min-width: 0;
+  }
+
+  .product-mock-embed .embed-panel-footnote {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+  }
+
+  .product-mock-main.main-area {
+    overflow: visible;
+    padding: 0.95rem 0.75rem 1rem;
+  }
+
+  .product-mock-embed .embed-page-header .page-title {
+    font-size: 1.3rem;
+  }
+
+  .product-mock-embed .embed-page-header .page-subtitle {
+    font-size: 0.92rem;
+  }
+
+  .product-mock-embed .embed-form-section {
+    margin-top: 1.2rem;
+    padding-top: 1rem;
+  }
+
+  .product-mock-embed .embed-form-mock {
+    padding: 0.9rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .product-mock-embed .embed-sidebar-email {
+    font-size: 0.84rem;
+  }
+
+  .product-mock-embed .embed-card-title {
+    font-size: 0.98rem;
+  }
+
+  .product-mock-embed .embed-card-desc {
+    font-size: 0.84rem;
+  }
+
+  .product-mock-embed .embed-panel-card {
+    padding: 0.9rem;
+  }
+
+  .product-mock-embed .embed-form-section-head {
+    gap: 0.65rem;
+  }
+
+  .product-mock-embed .embed-form-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+  }
+
+  .product-mock-embed .embed-form-section-title {
+    font-size: 1.06rem;
+  }
+
+  .product-mock-embed .embed-mock-input,
+  .product-mock-embed .embed-mock-textarea {
+    font-size: 0.9rem;
   }
 }
 

@@ -20,9 +20,8 @@ export function ChatbotShowcase() {
           Soporte conversacional que registra incidencias de verdad
         </h2>
         <p className="mt-4 text-gray-600 leading-relaxed">
-          Tus clientes o operadores describen el problema en lenguaje natural. Si el mensaje incluye un{" "}
-          <strong>correo</strong>, el backend crea un ticket en la base (patrón Strategy + Observer en la
-          API).
+          Tus clientes o operadores describen el problema en lenguaje natural y dejan su correo.
+          El asistente les guía para abrir el caso sin fricción.
         </p>
         <ul className="mt-6 space-y-3 text-sm text-gray-700">
           <li className="flex gap-2">
@@ -31,7 +30,7 @@ export function ChatbotShowcase() {
           </li>
           <li className="flex gap-2">
             <span className="text-primary font-bold">2.</span>
-            Usa «Registrar ejemplo» para ver un ticket de prueba al instante.
+            Escribe nombre, correo y qué pasó para iniciar el seguimiento.
           </li>
           <li className="flex gap-2">
             <span className="text-primary font-bold">3.</span>

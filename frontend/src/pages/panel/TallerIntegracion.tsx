@@ -57,8 +57,8 @@ export default function TallerIntegracion() {
     <>
       <PageHeader
         icon={<IconClipboard size={26} />}
-        title="Integración e-commerce (Adapter)"
-        subtitle="Traduce payloads de Amazon o Shopify al modelo interno del taller antes de guardar en SQLite."
+        title="Integración e-commerce"
+        subtitle="Importa información de Amazon o Shopify al formato interno del taller."
         meta={
           verApi ? (
             <span className="badge ok" style={{ fontSize: "0.72rem" }}>
