@@ -35,7 +35,7 @@ export function CheckboxWithLinks({
         </a>{" "}
         y la{" "}
         <a href={privacyHref} className="text-teal-600 hover:text-teal-700 underline">
-          Política de privacidad
+          Política de Privacidad
         </a>
       </label>
     </div>

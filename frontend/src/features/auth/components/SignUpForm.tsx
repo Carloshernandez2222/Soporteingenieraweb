@@ -22,13 +22,6 @@ export function SignUpForm() {
   const [sugerirLogin, setSugerirLogin] = useState(false);
   const currentYear = new Date().getFullYear();
 
-  function generarLlaveSegura() {
-    const arr = new Uint8Array(12);
-    crypto.getRandomValues(arr);
-    const raw = Array.from(arr, (n) => n.toString(16).padStart(2, "0")).join("");
-    setCompanyKey(`trk-${raw.slice(0, 20)}`);
-  }
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrors({});
@@ -115,23 +108,16 @@ export function SignUpForm() {
           label="Llave privada de compañía"
           id="companyKey"
           name="companyKey"
-          placeholder="trk-xxxxxxxxxxxxxxxxxxxx"
+          placeholder="Ingresa la llave entregada por el webmaster"
           value={companyKey}
           error={errors.companyKey}
           onChange={(e) => setCompanyKey(e.target.value)}
           required
         />
-        <div className="-mt-2 flex items-center justify-between gap-2">
+        <div className="-mt-2">
           <p className="text-xs text-gray-500">
-            Solo se usa la llave. No se solicita nombre de empresa para proteger su privacidad.
+            Ingresa la llave exacta asignada por el webmaster para vincular tu cuenta.
           </p>
-          <button
-            type="button"
-            onClick={generarLlaveSegura}
-            className="text-xs rounded-md border border-teal-200 px-2 py-1 text-teal-700 hover:bg-teal-50"
-          >
-            Generar llave
-          </button>
         </div>
         <InputField
           label="Correo"

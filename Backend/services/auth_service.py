@@ -107,14 +107,15 @@ class ServicioAuth:
             return _usuario_a_dict(session, user)
 
     def crear_token_reset(self, email: str) -> str:
+        email_norm = validar_y_normalizar_correo(email)
         with Session(get_engine()) as session:
-            user = session.exec(select(UserDB).where(UserDB.Email == email)).first()
+            user = session.exec(select(UserDB).where(UserDB.Email == email_norm)).first()
             if not user:
                 raise UserNotFoundError()
             
             token = secrets.token_urlsafe(32)
             # Guardar en el store centralizado
-            RESET_TOKENS[token] = (email, time.time() + 3600)
+            RESET_TOKENS[token] = (email_norm, time.time() + 3600)
             return token
 
     def restablecer_con_token(self, token: str, new_password: str) -> None:
