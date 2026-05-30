@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, status
-
+from fastapi import Request, HTTPException
 from ..core.auth_deps import require_roles
 from ..dependencies import get_servicio_admin
 from ..models.admin_schemas import (
@@ -26,19 +26,27 @@ def api_admin_usuarios(svc: ServicioAdmin = Depends(get_servicio_admin)):
 
 
 @router.post("/usuarios", summary="Crear usuario", status_code=status.HTTP_201_CREATED)
-def api_admin_crear_usuario(
+async def api_admin_crear_usuario(
+    request: Request,
     body: AdminUserCreateBody,
     svc: ServicioAdmin = Depends(get_servicio_admin),
 ):
-    user = svc.crear_usuario(
-        body.nombre,
-        body.apellidos,
-        body.email,
-        body.password,
-        body.rol,
-        body.companyId,
-    )
-    return {"success": True, "user": user}
+    # Esto imprimirá en la terminal exactamente lo que recibe el backend
+    data = await request.json()
+    print(f"DEBUG: Datos recibidos: {data}")
+    
+    try:
+        user = svc.crear_usuario(
+            body.nombre,
+            body.apellidos,
+            body.email,
+            body.password,
+            body.rol,
+            body.companyId,
+        )
+        return {"success": True, "user": user}
+    except Exception as e:
+        print(f"DEBUG: Error interno: {e}")
 
 
 @router.patch("/usuarios/{user_id}/rol", summary="Cambiar rol")

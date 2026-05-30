@@ -1,18 +1,20 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 from sqlmodel import SQLModel, Field
 
+# Función auxiliar para hora UTC
 def utc_now():
-    return datetime.now(timezone.utc)
+    return datetime.utcnow()
 
 # --- MÓDULO DE EMPRESA ---
 class CompanyDB(SQLModel, table=True):
     __tablename__ = "Companies"
     CompanyID: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    Name: str = Field(max_length=255)
-    Nit: str = Field(max_length=50, unique=True)
+    CompanyName: str = Field(max_length=255) # Asegúrate que sea CompanyName
+    CompanyKey: str = Field(max_length=80, unique=True)
     IsActive: bool = Field(default=True)
+    CreatedAt: datetime = Field(default_factory=utc_now)
 
 # --- MÓDULO DE IDENTIDAD Y SEGURIDAD ---
 class RoleDB(SQLModel, table=True):
@@ -31,12 +33,11 @@ class UserRoleDB(SQLModel, table=True):
 class UserDB(SQLModel, table=True):
     __tablename__ = "Users"
     UserID: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    Email: str = Field(index=True, unique=True)
+    PasswordHash: str
+    FirstName: str
+    LastName: str
     CompanyID: Optional[uuid.UUID] = Field(default=None, foreign_key="Companies.CompanyID")
-    Email: str = Field(max_length=255, unique=True)
-    PasswordHash: str = Field(max_length=255)
-    FirstName: str = Field(max_length=100)
-    LastName: str = Field(max_length=100)
-    DocumentNumber: str = Field(max_length=50)
     IsActive: bool = Field(default=True)
     CreatedAt: datetime = Field(default_factory=utc_now)
 

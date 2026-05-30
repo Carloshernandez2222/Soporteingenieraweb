@@ -11,13 +11,24 @@ from Backend.services.auth_service import _hash_password, _usuario_a_dict
 from Backend.services.company_service import ServicioCompany
 
 class ServicioAdmin:
-    def __init__(self) -> None:
-        self._companies = ServicioCompany()
+    def __init__(self, engine=None):
+        # Si no pasas el engine, lo obtiene de la función get_engine
+        self.engine = engine or get_engine()
 
-    def listar_usuarios(self) -> list[dict[str, Any]]:
-        with Session(get_engine()) as session:
-            users = session.exec(select(UserDB).order_by(UserDB.Email)).all()
-            return [_usuario_a_dict(session, u) for u in users]
+    def listar_usuarios(self) -> list[dict]:
+        with Session(self.engine) as session:
+            usuarios = session.exec(select(UserDB)).all()
+            return [
+                {
+                    "id": str(u.UserID),
+                    "nombre": u.FirstName,
+                    "apellidos": u.LastName,
+                    "email": u.Email,
+                    "activo": u.IsActive,
+                    "companyId": str(u.CompanyID) if u.CompanyID else None
+                } 
+                for u in usuarios
+            ]
 
     def crear_usuario(self, nombre: str, apellidos: str, email: str, password: str, rol: str, company_id: str | None) -> dict[str, Any]:
         email_norm = email.strip().lower()

@@ -1,19 +1,16 @@
 import re
-from typing import Self
-
 from pydantic import BaseModel, Field, field_validator
-
 from ..constants import MAX_EMAIL_LEN, MAX_NOMBRE_LEN
-
 
 def _sanitize_key(v: str) -> str:
     key = re.sub(r"\s+", "-", v.strip().lower())
     return re.sub(r"[^a-z0-9\-_.]", "", key)
 
-
 class CompanyCreateBody(BaseModel):
     nombre: str = Field(min_length=2, max_length=120)
     llave: str = Field(min_length=2, max_length=80)
+    ciudad: str = Field(min_length=2, max_length=100)
+    direccion: str = Field(min_length=2, max_length=200)
 
     @field_validator("llave")
     @classmethod
@@ -22,7 +19,6 @@ class CompanyCreateBody(BaseModel):
         if not key:
             raise ValueError("Llave inválida.")
         return key
-
 
 class CompanyActiveBody(BaseModel):
     activa: bool

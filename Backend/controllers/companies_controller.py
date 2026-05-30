@@ -18,15 +18,14 @@ def api_companies_todas(svc: ServicioCompany = Depends(get_servicio_company)):
 
 @router.post("", summary="Crear compañía y ubicación", status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_roles("webmaster"))])
 def api_company_crear(body: CompanyCreateBody):
-    # Usamos sesión directa aquí para asegurar la atomicidad (transacción)
     with Session(get_engine()) as session:
-        # 1. Crear compañía
-        nueva_comp = CompanyDB(Name=body.nombre, Nit=body.nit)
+        # Mapeo correcto: nombre -> CompanyName, llave -> CompanyKey
+        nueva_comp = CompanyDB(CompanyName=body.nombre, CompanyKey=body.llave)
         session.add(nueva_comp)
         session.commit()
         session.refresh(nueva_comp)
         
-        # 2. Crear ubicación asociada
+        # Mapeo de ubicación
         nueva_loc = LocationDB(City=body.ciudad, Address=body.direccion, CompanyID=nueva_comp.CompanyID)
         session.add(nueva_loc)
         session.commit()
