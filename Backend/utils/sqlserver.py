@@ -11,12 +11,29 @@ def _env(name: str, default: str = "") -> str:
     return os.environ.get(name, default).strip()
 
 
+def _env_first(*names: str, default: str = "") -> str:
+    """Acepta nombres de variables del repo y los de refactor-arquitectura (DB_*)."""
+    for name in names:
+        value = _env(name)
+        if value:
+            return value
+    return default
+
+
 def sqlserver_settings() -> dict[str, str]:
+    host_raw = _env_first("DB_HOST", "SQLSERVER_HOST", default="127.0.0.1,1433")
+    port = _env_first("DB_PORT", default="")
+    if not port and "," in host_raw:
+        _, port = host_raw.split(",", 1)
+        port = port.strip()
+    if not port:
+        port = "1433"
+    host = host_raw.split(",")[0].strip() or "127.0.0.1"
     return {
-        "server": _env("SQLSERVER_HOST", "127.0.0.1,1433"),
-        "database": _env("SQLSERVER_DATABASE", "TrackAidDB"),
-        "username": _env("SQLSERVER_USER", "sa"),
-        "password": _env("SQLSERVER_PASSWORD", ""),
+        "server": f"{host},{port}",
+        "database": _env_first("DB_NAME", "SQLSERVER_DATABASE", default="TrackAidDB"),
+        "username": _env_first("DB_USER", "SQLSERVER_USER", default="sa"),
+        "password": _env_first("DB_PASSWORD", "SQLSERVER_PASSWORD", default=""),
         "driver": _env("SQLSERVER_DRIVER", "ODBC Driver 18 for SQL Server"),
         "encrypt": _env("SQLSERVER_ENCRYPT", "yes"),
         "trust_server_certificate": _env("SQLSERVER_TRUST_CERT", "yes"),

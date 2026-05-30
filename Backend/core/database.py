@@ -6,11 +6,14 @@ from __future__ import annotations
 
 import os
 
+from dotenv import load_dotenv
 from sqlmodel import SQLModel, create_engine
 from sqlalchemy import text
 
 from ..config_paths import DEFAULT_SQLITE_PATH
 from ..utils.sqlserver import sqlalchemy_database_url
+
+load_dotenv()
 
 _engine = None
 

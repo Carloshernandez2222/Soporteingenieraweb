@@ -1,6 +1,7 @@
 from __future__ import annotations
-import secrets
 import hashlib
+import re
+import secrets
 import time
 from typing import Any
 from sqlmodel import Session, select
@@ -25,17 +26,31 @@ def _hash_password(password: str) -> str:
     dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000)
     return f"{salt}${dk.hex()}"
 
+def _is_legacy_sha256_hash(stored: str) -> bool:
+    """Hashes creados en rama refactor-arquitectura (sha256 plano)."""
+    return bool(re.fullmatch(r"[a-fA-F0-9]{64}", (stored or "").strip()))
+
+
 def _verify_password(password: str, stored: str) -> bool:
-    try:
-        salt, hexhash = stored.split("$", 1)
-        dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000)
-        return secrets.compare_digest(dk.hex(), hexhash)
-    except ValueError:
-        return False
+    stored = (stored or "").strip()
+    if "$" in stored:
+        try:
+            salt, hexhash = stored.split("$", 1)
+            dk = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000)
+            return secrets.compare_digest(dk.hex(), hexhash)
+        except ValueError:
+            return False
+    if _is_legacy_sha256_hash(stored):
+        digest = hashlib.sha256(password.encode("utf-8")).hexdigest()
+        return secrets.compare_digest(digest, stored.lower())
+    return False
 
 def _usuario_a_dict(session: Session, user: UserDB) -> dict[str, Any]:
-    """DTO para el frontend (incluye nombre, apellidos, rol y compañía)."""
-    nombre, apellidos = nombres_usuario(session, user)
+    """DTO para el frontend (modelo unificado Users.FirstName / CompanyID)."""
+    nombre = (user.FirstName or "").strip()
+    apellidos = (user.LastName or "").strip()
+    if not nombre and not apellidos:
+        nombre, apellidos = nombres_usuario(session, user)
     try:
         rol = obtener_rol_usuario(session, user.UserID)
     except Exception:
@@ -55,7 +70,7 @@ def _usuario_a_dict(session: Session, user: UserDB) -> dict[str, Any]:
 
 
 class ServicioAuth:
-    """Servicio de autenticación relacional (Persons + Users) con persistencia en SQL Server."""
+    """Autenticación con Users unificados (FirstName, LastName, CompanyID) y JWT."""
 
     def registrar(
         self,
@@ -80,6 +95,7 @@ class ServicioAuth:
                 PasswordHash=_hash_password(password),
                 FirstName=nombre.strip(),
                 LastName=apellidos.strip(),
+                CompanyID=company.CompanyID,
             )
             session.add(nuevo_usuario)
             session.flush()
@@ -101,6 +117,11 @@ class ServicioAuth:
             
             if not _verify_password(password, user.PasswordHash):
                 raise InvalidCredentialsError()
+
+            if _is_legacy_sha256_hash(user.PasswordHash):
+                user.PasswordHash = _hash_password(password)
+                session.add(user)
+                session.commit()
 
             return _usuario_a_dict(session, user)
 

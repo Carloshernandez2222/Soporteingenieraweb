@@ -15,13 +15,19 @@ from Backend.services.company_service import ServicioCompany
 
 
 class ServicioAdmin:
-    def __init__(self) -> None:
+    def __init__(self, engine=None) -> None:
+        self.engine = engine or get_engine()
         self._companies = ServicioCompany()
 
     def listar_usuarios(self) -> list[dict[str, Any]]:
-        with Session(get_engine()) as session:
+        with Session(self.engine) as session:
             users = session.exec(select(UserDB).order_by(UserDB.Email)).all()
-            return [_usuario_a_dict(session, u) for u in users]
+            out: list[dict[str, Any]] = []
+            for u in users:
+                data = _usuario_a_dict(session, u)
+                data["activo"] = bool(u.IsActive)
+                out.append(data)
+            return out
 
     def crear_usuario(
         self,
@@ -35,7 +41,7 @@ class ServicioAdmin:
         email_norm = email.strip().lower()
         rol_norm = normalizar_rol(rol)
 
-        with Session(get_engine()) as session:
+        with Session(self.engine) as session:
             if session.exec(select(UserDB).where(UserDB.Email == email_norm)).first():
                 raise EmailAlreadyExistsError()
 
@@ -60,7 +66,7 @@ class ServicioAdmin:
             return _usuario_a_dict(session, user)
 
     def cambiar_rol(self, user_id: str, rol: str) -> dict[str, Any]:
-        with Session(get_engine()) as session:
+        with Session(self.engine) as session:
             user = session.get(UserDB, UUID(user_id))
             if not user:
                 raise UserNotFoundError()
@@ -69,7 +75,7 @@ class ServicioAdmin:
             return _usuario_a_dict(session, user)
 
     def cambiar_password(self, user_id: str, password: str) -> None:
-        with Session(get_engine()) as session:
+        with Session(self.engine) as session:
             user = session.get(UserDB, UUID(user_id))
             if not user:
                 raise UserNotFoundError()
@@ -78,7 +84,7 @@ class ServicioAdmin:
             session.commit()
 
     def asignar_compania(self, user_id: str, company_id: str) -> dict[str, Any]:
-        with Session(get_engine()) as session:
+        with Session(self.engine) as session:
             user = session.get(UserDB, UUID(user_id))
             if not user:
                 raise UserNotFoundError()
@@ -90,11 +96,13 @@ class ServicioAdmin:
             return _usuario_a_dict(session, user)
 
     def set_usuario_activo(self, user_id: str, activo: bool) -> dict[str, Any]:
-        """Desactivación lógica vía rol (UserRoles.IsActive)."""
-        with Session(get_engine()) as session:
+        """Activa o desactiva usuario (Users.IsActive) y enlaces de rol."""
+        with Session(self.engine) as session:
             user = session.get(UserDB, UUID(user_id))
             if not user:
                 raise UserNotFoundError()
+            user.IsActive = activo
+            session.add(user)
             links = session.exec(select(UserRoleDB).where(UserRoleDB.UserID == user.UserID)).all()
             for link in links:
                 link.IsActive = activo

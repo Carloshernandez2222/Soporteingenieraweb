@@ -47,6 +47,9 @@ cd frontend && npm install && npm run dev
 - Verificación local de API:
   - Rápida: `bash scripts/verify-api.sh http://127.0.0.1:8013`
   - Completa (51 rutas): `python3 scripts/verify-api-full.py http://127.0.0.1:8013` (con el backend en marcha).
+- Tests (rama `refactor-arquitectura`): `pytest Backend/tests test_app.py Backend/test/test.py -q`
+- SQL Server local: `docker compose up -d` (ver `docker-compose.yml`)
+- Despliegue Azure: [docs/AZURE_DESPLIEGUE.md](docs/AZURE_DESPLIEGUE.md)
 
 ### Cuentas demo del panel (misma contraseña)
 
