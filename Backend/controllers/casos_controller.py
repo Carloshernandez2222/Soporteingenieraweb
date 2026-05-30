@@ -1,6 +1,11 @@
+from datetime import datetime
 from typing import Any, Optional
-from fastapi import APIRouter, Body, HTTPException, Query, status, Depends
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+
+from ..config_paths import BACKEND_TEMPLATES_DIR
 from ..dependencies import get_servicio_admin, get_servicio_registro_sqlite, get_servicio_soporte, get_servicio_taller
 from ..core.auth_deps import CurrentUser, get_current_user, require_roles
 from ..core.exceptions import CasoNoEncontradoError
@@ -11,6 +16,7 @@ from ..patterns.adapter import obtener_adaptador
 _soporte_o_web = Depends(require_roles("soporte", "webmaster"))
 
 router = APIRouter(prefix="/api/casos", tags=["casos"])
+templates = Jinja2Templates(directory=BACKEND_TEMPLATES_DIR)
 
 # --- Modelos Pydantic para el Request Body ---
 class RegistroSoporteBody(BaseModel):
@@ -166,3 +172,14 @@ def api_registro_por_email(email: str = Query(...)):
 def api_registro_detalle(ticket_id: int):
     data = get_servicio_registro_sqlite().obtener_por_id(ticket_id)
     return {"status": "success", "data": data}
+
+
+# --- Reportes (plantilla HTML) ---
+
+@router.get("/reporte-pdf", summary="Generar reporte visual")
+async def generar_reporte(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="reporte.html",
+        context={"fecha": datetime.now().strftime("%Y-%m-%d %H:%M")},
+    )

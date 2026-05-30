@@ -11,5 +11,5 @@ def test_health_check():
     # Importante: usar 'app' directamente si es el cliente de FastAPI
     from fastapi.testclient import TestClient
     client = TestClient(app)
-    response = client.get("/api/health")
+    response = client.get("/health")
     assert response.status_code == 200
