@@ -20,6 +20,14 @@ class ServicioSoporte:
         for obs in self._observadores:
             obs.actualizar(evento, datos)
 
+    def _asignar_prioridad(self, case_type: str, descripcion: str) -> str:
+        texto = f"{case_type} {descripcion}".lower()
+        if any(p in texto for p in ("caída", "caida", "urgente", "falla", "error", "no puedo", "roto")):
+            return "High"
+        if any(p in texto for p in ("consulta", "información", "informacion", "pregunta", "duda")):
+            return "Low"
+        return "Medium"
+
     def registrar_caso(
         self,
         user_id: str,
@@ -50,6 +58,7 @@ class ServicioSoporte:
                     raise ValueError("ORDER_NOT_FOUND")
 
             company = self._companies.compania_primaria_usuario(session, target_user_id)
+            prioridad = priority if priority and priority != "Medium" else self._asignar_prioridad(case_type, descripcion)
 
             nuevo_caso = SupportCaseDB(
                 UserID=target_user_id,
@@ -58,7 +67,7 @@ class ServicioSoporte:
                 Description=descripcion,
                 CaseType=case_type,
                 Status="Abierto",
-                Priority=priority,
+                Priority=prioridad,
             )
             
             session.add(nuevo_caso)
