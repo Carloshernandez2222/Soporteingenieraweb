@@ -54,7 +54,7 @@ class ServicioAdmin:
                 company = session.get(CompanyDB, UUID(company_id))
                 if not company:
                     raise ValueError("Compañía no encontrada.")
-                self._companies.vincular_usuario(session, user.UserID, company)
+                user.CompanyID = UUID(company_id)  # asignar directo al modelo
 
             session.commit()
             session.refresh(user)

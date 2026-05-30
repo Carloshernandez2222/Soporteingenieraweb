@@ -1,14 +1,11 @@
-"""
-Motor SQLModel configurado para SQL Server.
-"""
-
 from __future__ import annotations
 import os
+from pathlib import Path
 from sqlmodel import SQLModel, create_engine
 from dotenv import load_dotenv
 
-# Cargar variables de entorno
-load_dotenv()
+# Ruta explícita al .env — funciona sin importar desde dónde se lanza uvicorn
+load_dotenv(dotenv_path=Path(__file__).resolve().parent.parent.parent / ".env")
 
 _engine = None
 
@@ -19,8 +16,9 @@ def get_engine():
         # AQUI FORZAMOS LA CONEXIÓN PARA EVITAR CUALQUIER ERROR DE LECTURA DEL .ENV
         # Si tienes problemas, esta cadena está hardcodeada con la contraseña validada.
         url = (
-            "mssql+pyodbc://sa:Password123@localhost:1433/TrackAidDB?"
-            "driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
+            f"mssql+pyodbc://{os.environ['DB_USER']}:{os.environ['DB_PASSWORD']}"
+            f"@{os.environ.get('DB_HOST','localhost')}:{os.environ.get('DB_PORT','1433')}"
+            f"/{os.environ['DB_NAME']}?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
         )
         
         try:

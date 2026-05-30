@@ -45,8 +45,13 @@ async def api_admin_crear_usuario(
             body.companyId,
         )
         return {"success": True, "user": user}
+    except EmailAlreadyExistsError:
+        raise HTTPException(status_code=409, detail="El correo ya está registrado.")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        print(f"DEBUG: Error interno: {e}")
+        print(f"ERROR: {e}")
+        raise HTTPException(status_code=500, detail="Error interno al crear usuario.")
 
 
 @router.patch("/usuarios/{user_id}/rol", summary="Cambiar rol")

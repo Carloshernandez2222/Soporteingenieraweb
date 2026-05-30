@@ -74,3 +74,19 @@ class ServicioSoporte:
                     "prioridad": c.Priority
                 } for c in casos
             ]
+
+            def cerrar_caso(self, case_id: str) -> None:
+                try:
+                    target_case_id = UUID(case_id)
+                except (ValueError, TypeError):
+                    raise ValueError("El ID del caso no tiene un formato válido.")
+
+                with Session(self.engine) as session:
+                    caso = session.exec(
+                        select(SupportCaseDB).where(SupportCaseDB.CaseID == target_case_id)
+                    ).first()
+                    if not caso:
+                        raise ValueError(f"Caso {case_id} no encontrado.")
+                    caso.Status = "Closed"
+                    session.add(caso)
+                    session.commit()
