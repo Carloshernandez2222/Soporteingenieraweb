@@ -4,7 +4,6 @@ import { registrarCasoStrategy } from "@/lib/panelPatronesApi";
 import { ChatMessageBody } from "./ChatMessageBody";
 import {
   botReply,
-  CHAT_EXAMPLE_TICKET,
   CHAT_QUICK_PROMPTS,
   CHAT_WELCOME,
   nextChatId,
@@ -12,10 +11,14 @@ import {
   type ChatMessage,
 } from "./chatLogic";
 
+const MAX_CHAT_CHARS = 500;
+
 type ChatWidgetProps = {
   /** Solo cuerpo del chat (sin cabecera shell). */
   bare?: boolean;
   className?: string;
+  /** Si se define, guarda/restaura la conversación para sesión autenticada. */
+  storageKey?: string;
 };
 
 function SendIcon() {
@@ -32,7 +35,7 @@ function SendIcon() {
   );
 }
 
-export function ChatWidget({ bare = false, className = "" }: ChatWidgetProps) {
+export function ChatWidget({ bare = false, className = "", storageKey }: ChatWidgetProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([CHAT_WELCOME]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
@@ -47,6 +50,28 @@ export function ChatWidget({ bare = false, className = "" }: ChatWidgetProps) {
   useEffect(() => {
     scrollEnd();
   }, [messages, pending, scrollEnd]);
+
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as ChatMessage[];
+      if (!Array.isArray(parsed) || parsed.length === 0) return;
+      setMessages(parsed);
+    } catch {
+      // Ignorar estado corrupto y continuar con bienvenida por defecto.
+    }
+  }, [storageKey]);
+
+  useEffect(() => {
+    if (!storageKey) return;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(messages));
+    } catch {
+      // Ignorar si el navegador bloquea storage.
+    }
+  }, [messages, storageKey]);
 
   function pushMessage(msg: Omit<ChatMessage, "id">) {
     setMessages((prev) => [...prev, { ...msg, id: nextChatId() }]);
@@ -78,11 +103,6 @@ export function ChatWidget({ bare = false, className = "" }: ChatWidgetProps) {
     const trimmed = text.trim();
     if (!trimmed) return;
 
-    if (trimmed === "Registrar ticket de prueba" || trimmed === "Registrar ejemplo") {
-      await intentarRegistro(CHAT_EXAMPLE_TICKET);
-      return;
-    }
-
     if (pareceSolicitudTicket(trimmed)) {
       await intentarRegistro(trimmed);
       return;
@@ -94,6 +114,7 @@ export function ChatWidget({ bare = false, className = "" }: ChatWidgetProps) {
   function sendUser(text: string) {
     const trimmed = text.trim();
     if (!trimmed || pending) return;
+    if (trimmed.length > MAX_CHAT_CHARS) return;
     pushMessage({ role: "user", text: trimmed });
     setInput("");
     void responderUsuario(trimmed);
@@ -170,7 +191,7 @@ export function ChatWidget({ bare = false, className = "" }: ChatWidgetProps) {
       <div className="chat-composer">
         <p className="chat-hint">
           <span aria-hidden>💡</span>
-          Incluye tu correo para registrar un ticket real
+          Incluye tu correo para registrar un ticket real (máximo {MAX_CHAT_CHARS} caracteres)
         </p>
         <div className="chat-quick">
           {CHAT_QUICK_PROMPTS.map((q) => (
@@ -194,12 +215,13 @@ export function ChatWidget({ bare = false, className = "" }: ChatWidgetProps) {
             ref={inputRef}
             rows={1}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => setInput(e.target.value.slice(0, MAX_CHAT_CHARS))}
             onKeyDown={onInputKeyDown}
             placeholder="Ej: Me llamo Ana, ana@tienda.com, falla en pedido #4582…"
             disabled={pending}
             className="chat-input"
             autoComplete="off"
+            maxLength={MAX_CHAT_CHARS}
           />
           <button
             type="submit"
@@ -210,6 +232,9 @@ export function ChatWidget({ bare = false, className = "" }: ChatWidgetProps) {
             <SendIcon />
           </button>
         </form>
+        <p className="chat-counter m-0" aria-live="polite">
+          {input.length}/{MAX_CHAT_CHARS}
+        </p>
       </div>
     </div>
   );

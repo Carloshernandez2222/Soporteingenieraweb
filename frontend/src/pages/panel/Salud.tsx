@@ -5,7 +5,7 @@ import PageHeader from "../../components/PageHeader";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 
 export default function Salud() {
-  useDocumentTitle("Estado del API");
+  useDocumentTitle("Estado del servicio");
   const [ok, setOk] = useState<boolean | null>(null);
   const [raw, setRaw] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -48,12 +48,7 @@ export default function Salud() {
       <PageHeader
         icon={<IconHealth size={26} />}
         title="Monitor de disponibilidad"
-        subtitle="Comprueba que el servicio responde. Útil tras un despliegue o para diagnóstico rápido."
-        meta={
-          <span className="badge ok" style={{ fontSize: "0.72rem" }}>
-            GET /health
-          </span>
-        }
+        subtitle="Comprueba que el servicio responde. Útil para diagnóstico rápido."
       />
       <div className="card animate-in">
         {ok === null && !err && (
@@ -62,7 +57,7 @@ export default function Salud() {
             <div>
               <strong style={{ display: "block", marginBottom: "0.25rem" }}>Verificando conexión…</strong>
               <span className="hint" style={{ margin: 0 }}>
-                Esperando respuesta del backend.
+                Esperando respuesta del servicio.
               </span>
             </div>
           </div>
@@ -77,7 +72,7 @@ export default function Salud() {
                 {ok ? "El API respondió correctamente." : "No se pudo validar el estado."}
               </strong>
               <span className="hint" style={{ margin: 0 }}>
-                Respuesta reciente del endpoint de salud.
+                Última respuesta del sistema.
               </span>
             </div>
           </div>
@@ -85,9 +80,7 @@ export default function Salud() {
         {raw && <pre className="json" style={{ marginTop: "1rem" }}>{raw}</pre>}
         {frontendBuildMissing && (
           <div className="feedback show err" role="alert" style={{ marginTop: "1rem" }}>
-            El API está vivo pero falta el build del frontend en el servidor (Vite). En Azure configure{" "}
-            <code>POST_BUILD_COMMAND</code> y <code>WEBSITE_NODE_DEFAULT_VERSION</code> (ver README del repo) o despliegue
-            con <code>frontend/dist</code> generado.
+            El servicio principal responde, pero falta publicar correctamente la interfaz web.
           </div>
         )}
         {err && (

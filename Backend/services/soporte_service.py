@@ -3,12 +3,12 @@ from typing import Any, Optional, List
 from uuid import UUID
 from sqlmodel import Session, select
 from Backend.core.database import get_engine
-from Backend.models.db_models import SupportCaseDB, OrderDB
+from Backend.models.db_models import SupportCaseDB, UserDB
 from Backend.core.exceptions import CasoNoEncontradoError
 from Backend.patterns.observer import IObservador, ObservadorEmail, ObservadorLogs
 
 class ServicioSoporte:
-    """Servicio de negocio: Persistencia de tickets en SQL Server con SQLModel."""
+    """Servicio de negocio: Persistencia de tickets unificada en SQL Server."""
 
     def __init__(self):
         self._observadores: List[IObservador] = [ObservadorLogs(), ObservadorEmail()]
@@ -17,56 +17,66 @@ class ServicioSoporte:
         for obs in self._observadores:
             obs.actualizar(evento, datos)
 
+    def _asignar_prioridad(self, case_type: str, descripcion: str) -> str:
+        """REGLA DE NEGOCIO: Asignación de prioridad dinámica basada en el texto y tipo."""
+        texto_analisis = (case_type + " " + descripcion).lower()
+        
+        # Palabras clave críticas = Alta prioridad
+        if any(palabra in texto_analisis for palabra in ["caída", "caida", "urgente", "falla", "error", "no puedo", "roto"]):
+            return "High"
+        # Palabras de consulta = Baja prioridad
+        elif any(palabra in texto_analisis for palabra in ["consulta", "información", "informacion", "pregunta", "duda"]):
+            return "Low"
+        
+        # Por defecto
+        return "Medium"
+
     def registrar_caso(
         self,
         user_id: str,
         descripcion: str,
-        order_id: Optional[str] = None,
         case_type: str = "General",
-        priority: str = "Medium"
     ) -> dict[str, Any]:
         
         with Session(get_engine()) as session:
-            # 1. Validación de UserID (Obligatorio)
+            # 1. Validación de formato de UserID
             try:
                 target_user_id = UUID(user_id)
             except (ValueError, TypeError):
-                raise ValueError("FORMATO_INVALIDO_USER_ID")
+                raise ValueError("El ID de usuario proporcionado no tiene un formato válido.")
 
-            # 2. Validación de OrderID (Solo si viene con datos)
-            target_order_id = None
-            if order_id and order_id.strip():
-                try:
-                    target_order_id = UUID(order_id)
-                except ValueError:
-                    raise ValueError("FORMATO_INVALIDO_ORDER_ID")
-                
-                # Validar existencia real en base de datos
-                order = session.exec(select(OrderDB).where(OrderDB.OrderID == target_order_id)).first()
-                if not order:
-                    raise ValueError("ORDER_NOT_FOUND")
+            # 2. Validar que el usuario realmente existe en SQL Server
+            usuario = session.exec(select(UserDB).where(UserDB.UserID == target_user_id)).first()
+            if not usuario:
+                raise ValueError("El usuario especificado no existe en la base de datos.")
 
-            # 3. Creación del caso (Ahora guarda la descripción)
+            # 3. Aplicar regla de negocio de prioridad
+            prioridad_calculada = self._asignar_prioridad(case_type, descripcion)
+
+            # 4. Creación del caso (ID generado automáticamente por SQLModel)
             nuevo_caso = SupportCaseDB(
                 UserID=target_user_id,
-                OrderID=target_order_id,
-                Description=descripcion,  # <--- GUARDAMOS LA DESCRIPCIÓN
+                Description=descripcion,
                 CaseType=case_type,
                 Status="Open",
-                Priority=priority
+                Priority=prioridad_calculada
             )
             
             session.add(nuevo_caso)
             session.commit()
             session.refresh(nuevo_caso)
 
-            # 4. Notificación
-            self.notificar("CASO_CREADO", {"case_id": str(nuevo_caso.CaseID), "type": case_type})
+            # 5. Notificación
+            self.notificar("CASO_CREADO", {
+                "case_id": str(nuevo_caso.CaseID), 
+                "type": case_type,
+                "priority": prioridad_calculada
+            })
 
             return {
                 "status": "success",
                 "case_id": str(nuevo_caso.CaseID),
-                "message": f"Caso #{nuevo_caso.CaseID} registrado exitosamente."
+                "message": f"Caso guardado exitosamente con prioridad {prioridad_calculada}."
             }
 
     def listar_todos_casos(self) -> List[dict[str, Any]]:
@@ -79,19 +89,18 @@ class ServicioSoporte:
                     "type": c.CaseType,
                     "status": c.Status,
                     "priority": c.Priority,
-                    "created_at": c.CreatedAt
+                    "description": c.Description,
+                    "created_at": c.CreatedAt.isoformat() if c.CreatedAt else None
                 } for c in casos
             ]
 
-    # --- NUEVO MÉTODO: Listar casos de un usuario específico ---
     def listar_casos_usuario(self, user_id: str) -> List[dict[str, Any]]:
         with Session(get_engine()) as session:
             try:
                 target_id = UUID(user_id)
             except (ValueError, TypeError):
-                raise ValueError("FORMATO_INVALIDO_USER_ID")
+                raise ValueError("El ID de usuario proporcionado no tiene un formato válido.")
 
-            # Buscamos solo los tickets que pertenezcan a este usuario
             casos = session.exec(
                 select(SupportCaseDB)
                 .where(SupportCaseDB.UserID == target_id)
@@ -104,8 +113,8 @@ class ServicioSoporte:
                     "type": c.CaseType,
                     "status": c.Status,
                     "priority": c.Priority,
-                    "description": getattr(c, 'Description', 'Sin descripción'), # <--- DEVOLVEMOS LA DESCRIPCIÓN
-                    "created_at": c.CreatedAt
+                    "description": getattr(c, 'Description', 'Sin descripción'),
+                    "created_at": c.CreatedAt.isoformat() if c.CreatedAt else None
                 } for c in casos
             ]
 
@@ -114,7 +123,7 @@ class ServicioSoporte:
             try:
                 target_id = UUID(case_id)
             except (ValueError, TypeError):
-                raise ValueError("FORMATO_INVALIDO_ID")
+                raise ValueError("El ID del caso no tiene un formato válido.")
 
             caso = session.exec(select(SupportCaseDB).where(SupportCaseDB.CaseID == target_id)).first()
             if not caso:

@@ -12,35 +12,35 @@ from sqlalchemy.exc import SQLAlchemyError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .config_paths import FRONTEND_ASSETS_DIR, FRONTEND_IMAGES_DIR
 from .core.database import init_db
+from .controllers.admin_controller import router as admin_router
 from .controllers.auth_controller import router as auth_router
 from .controllers.casos_controller import router as casos_router
+from .controllers.companies_controller import router as companies_router
 from .controllers.health_controller import router as health_router
-from .controllers.legacy_casos_controller import router as legacy_casos_router
-from .controllers.registro_controller import router as registro_router
 from .controllers.spa_controller import router as spa_router
 
+from .core.exceptions_companies import (
+    CompanyInactiveError,
+    CompanyKeyInUseError,
+    CompanyNotFoundError,
+)
 from .core.exceptions import (
     CasoNoEncontradoError,
     CorreoInvalidoError,
     IdDuplicadoError,
     IssueInvalidoError,
     NombreInvalidoError,
-    RateLimitExceededError,
-    TicketSqliteNoEncontradoError,
     EmailAlreadyExistsError,
     UserNotFoundError,
     InvalidCredentialsError,
 )
 
-
 def _cors_allow_origins() -> list[str]:
     raw = os.environ.get("CORS_ORIGINS", "").strip()
     return [o.strip() for o in raw.split(",") if o.strip()] if raw else ["*"]
-
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI):
@@ -52,7 +52,6 @@ async def _lifespan(app: FastAPI):
     log = logging.getLogger("trackaid")
     try:
         from .core.database import create_database_url
-
         url = create_database_url()
         log.info("Base de datos: %s", url.split("@")[-1] if "@" in url else url)
     except Exception:
@@ -61,12 +60,10 @@ async def _lifespan(app: FastAPI):
     if os.environ.get("SKIP_DB_SEED", "").lower() not in ("1", "true", "yes"):
         try:
             from .core.seed import ejecutar_seed_demo
-
             ejecutar_seed_demo()
         except Exception as exc:
-            log.warning("Seed de usuarios demo omitido (revise SQL Server / .env): %s", exc)
+            log.warning("Seed de usuarios demo omitido: %s", exc)
     yield
-
 
 def create_app() -> FastAPI:
     app = FastAPI(title="API Soporte Técnico", version="1.0.0", lifespan=_lifespan)
@@ -78,6 +75,7 @@ def create_app() -> FastAPI:
 
     app.add_middleware(CORSMiddleware, allow_origins=_cors_allow_origins(), allow_methods=["*"], allow_headers=["*"])
 
+    # --- Exception Handlers ---
     @app.exception_handler(RequestValidationError)
     async def validacion_pydantic_handler(request: Request, exc: RequestValidationError):
         return JSONResponse(status_code=422, content={"status": "error", "message": "Datos de entrada inválidos."})
@@ -105,22 +103,10 @@ def create_app() -> FastAPI:
     @app.exception_handler(SQLAlchemyError)
     async def database_error_handler(request: Request, exc: SQLAlchemyError):
         logging.getLogger("trackaid").exception("Error de base de datos")
-        return JSONResponse(
-            status_code=503,
-            content={
-                "code": "DATABASE_ERROR",
-                "message": (
-                    "No se pudo acceder a la base de datos. "
-                    "En Codespace: docker compose up -d, bash scripts/codespace-init-db.sh "
-                    "y SQLSERVER_PASSWORD en .env (ver README)."
-                ),
-            },
-        )
+        return JSONResponse(status_code=503, content={"code": "DATABASE_ERROR", "message": "Error interno de base de datos."})
 
     @app.exception_handler(ValueError)
     async def value_error_handler(request: Request, exc: ValueError):
-        if str(exc) == "ORDER_NOT_FOUND":
-            return JSONResponse(status_code=400, content={"status": "error", "code": "ORDER_NOT_FOUND", "message": "El ID de pedido no existe."})
         return JSONResponse(status_code=400, content={"status": "error", "message": str(exc)})
 
     @app.exception_handler(NombreInvalidoError)
@@ -131,22 +117,28 @@ def create_app() -> FastAPI:
     async def issue_invalido_handler(request: Request, exc: IssueInvalidoError):
         return JSONResponse(status_code=400, content={"status": "error", "message": str(exc)})
 
-    @app.exception_handler(TicketSqliteNoEncontradoError)
-    async def ticket_sqlite_no_encontrado(request: Request, exc: TicketSqliteNoEncontradoError):
-        return JSONResponse(
-            status_code=404,
-            content={"status": "error", "code": "TICKET_NOT_FOUND", "message": str(exc)},
-        )
-
     @app.exception_handler(IdDuplicadoError)
     async def id_duplicado_handler(request: Request, exc: IdDuplicadoError):
         return JSONResponse(status_code=409, content={"status": "error", "message": str(exc)})
 
+    @app.exception_handler(CompanyNotFoundError)
+    async def company_not_found(request: Request, exc: CompanyNotFoundError):
+        return JSONResponse(status_code=404, content={"code": "COMPANY_NOT_FOUND", "message": str(exc)})
+
+    @app.exception_handler(CompanyKeyInUseError)
+    async def company_key_in_use(request: Request, exc: CompanyKeyInUseError):
+        return JSONResponse(status_code=409, content={"code": "COMPANY_KEY_IN_USE", "message": str(exc)})
+
+    @app.exception_handler(CompanyInactiveError)
+    async def company_inactive(request: Request, exc: CompanyInactiveError):
+        return JSONResponse(status_code=400, content={"code": "COMPANY_INACTIVE", "message": str(exc)})
+
+    # --- Routers ---
     app.include_router(health_router)
-    app.include_router(legacy_casos_router)
     app.include_router(casos_router)
-    app.include_router(registro_router)
     app.include_router(auth_router)
+    app.include_router(companies_router)
+    app.include_router(admin_router)
     app.include_router(spa_router)
 
     return app

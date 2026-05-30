@@ -39,7 +39,7 @@ export default function TallerMetricas() {
     <>
       <PageHeader
         icon={<IconClipboard size={26} />}
-        title="Métricas jerárquicas (Composite)"
+        title="Métricas jerárquicas"
         subtitle="Totales y prioridad promedio por tienda/cliente y a nivel global."
         meta={
           verApi ? (

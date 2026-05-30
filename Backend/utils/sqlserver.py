@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import os
+from typing import Any
 from urllib.parse import quote_plus
-
-import pyodbc
 
 
 def _env(name: str, default: str = "") -> str:
@@ -56,6 +55,8 @@ def sqlalchemy_database_url() -> str:
     )
 
 
-def obtener_conexion_sqlserver() -> pyodbc.Connection:
+def obtener_conexion_sqlserver() -> Any:
     """Conexión directa pyodbc (scripts de diagnóstico)."""
+    import pyodbc
+
     return pyodbc.connect(pyodbc_connection_string())

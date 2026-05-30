@@ -55,7 +55,7 @@ export default function TallerLista() {
     <>
       <PageHeader
         icon={<IconClipboard size={26} />}
-        title="Casos del taller (SQLite)"
+        title="Casos del taller"
         subtitle="Vista tabular de todos los casos persistidos. Pulse «Actualizar» tras crear o modificar datos en otra pestaña."
         meta={
           <button type="button" className="btn secondary" onClick={() => void cargar()} disabled={load}>

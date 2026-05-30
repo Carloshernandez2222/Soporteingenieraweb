@@ -19,15 +19,15 @@ export function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[100] bg-white/95 backdrop-blur border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center h-16 md:h-20 gap-3 lg:gap-5">
+      <div className="max-w-7xl mx-auto px-3 sm:px-5 lg:px-8">
+        <div className="flex items-center justify-between min-h-16 md:min-h-20 py-2 md:py-3 gap-2 sm:gap-3 lg:gap-5 min-w-0">
           <Link to="/" className="flex items-center gap-2 shrink-0" aria-label="TrackAid inicio">
             <img
               src={publicAsset("images/logo.png")}
               alt="TrackAid"
-              width={160}
-              height={48}
-              className="h-10 w-auto object-contain"
+              width={180}
+              height={54}
+              className="h-7 sm:h-9 md:h-11 lg:h-14 w-auto max-w-[112px] sm:max-w-[170px] lg:max-w-none object-contain"
             />
           </Link>
 
@@ -49,10 +49,10 @@ export function Header() {
             </ul>
           </nav>
 
-          <div className="flex items-center justify-end shrink-0 gap-2 sm:gap-2.5 ml-auto lg:ml-0">
+          <div className="flex items-center justify-end shrink-0 gap-1.5 sm:gap-2.5 ml-auto lg:ml-0 min-w-0">
             <Link
               to="/demo"
-              className="inline-flex items-center justify-center px-3.5 sm:px-4 py-2 rounded-full text-sm font-semibold border-2 border-primary/35 text-primary bg-primary/[0.06] hover:bg-primary/10 hover:border-primary/50 transition-colors"
+              className="hidden lg:inline-flex items-center justify-center px-3.5 sm:px-4 py-2 rounded-full text-sm font-semibold border-2 border-primary/35 text-primary bg-primary/[0.06] hover:bg-primary/10 hover:border-primary/50 transition-colors"
             >
               Demo
             </Link>
@@ -60,7 +60,7 @@ export function Header() {
               <>
                 <Link
                   to="/panel"
-                  className="inline-flex px-2 sm:px-3 py-2 text-gray-850 hover:text-primary font-medium text-sm transition-colors"
+                  className="inline-flex px-2 sm:px-3 py-2 text-gray-850 hover:text-primary font-medium text-xs sm:text-sm transition-colors whitespace-nowrap"
                 >
                   Panel
                 </Link>
@@ -70,7 +70,7 @@ export function Header() {
                     logout();
                     navigate("/", { replace: true });
                   }}
-                  className="px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 text-gray-850 rounded-full font-medium text-sm hover:bg-gray-50 transition-colors"
+                  className="hidden sm:inline-flex px-2.5 sm:px-5 py-2 sm:py-2.5 border border-gray-300 text-gray-850 rounded-full font-medium text-xs sm:text-sm hover:bg-gray-50 transition-colors whitespace-nowrap"
                 >
                   Salir
                 </button>
@@ -79,15 +79,15 @@ export function Header() {
               <>
                 <Link
                   to="/iniciar-sesion"
-                  className="hidden sm:inline-flex px-3 py-2 text-gray-850 hover:text-primary font-medium text-sm transition-colors"
+                  className="hidden md:inline-flex px-3 py-2 text-gray-850 hover:text-primary font-medium text-sm transition-colors"
                 >
                   Iniciar sesión
                 </Link>
                 <Link
                   to="/registro"
-                  className="px-4 sm:px-5 py-2 sm:py-2.5 bg-primary text-white rounded-full font-medium text-sm hover:bg-primary-dark transition-colors"
+                  className="px-3 sm:px-5 py-2 sm:py-2.5 bg-primary text-white rounded-full font-medium text-xs sm:text-sm hover:bg-primary-dark transition-colors whitespace-nowrap"
                 >
-                  Registrarse
+                  Registro
                 </Link>
               </>
             )}

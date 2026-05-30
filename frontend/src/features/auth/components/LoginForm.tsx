@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { AuthLogo } from "./AuthLogo";
 import { InputField } from "./InputField";
-import { SocialLoginButtons } from "./SocialLoginButtons";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
 import { Toast } from "./Toast";
 import { login as apiLogin } from "@/lib/trackaidApi";
@@ -36,6 +35,7 @@ export function LoginForm() {
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sugerirRegistro, setSugerirRegistro] = useState(false);
+  const currentYear = new Date().getFullYear();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -70,7 +70,7 @@ export function LoginForm() {
       return;
     }
     if (data?.success && data.user) {
-      setUser(data.user);
+      setUser(data.user, data.accessToken);
       navigate(destinoTrasLogin(location.state), { replace: true });
     }
   }
@@ -84,9 +84,12 @@ export function LoginForm() {
     <div className="w-full max-w-md mx-auto flex flex-col items-stretch">
       <Link
         to="/"
-        className="self-start text-sm font-medium text-teal-600 hover:text-teal-700 mb-6"
+        className="group self-start mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1.5 text-sm font-semibold text-primary-light transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
       >
-        regresar
+        <span aria-hidden className="text-base leading-none transition-transform group-hover:-translate-x-0.5">
+          ←
+        </span>
+        Volver
       </Link>
       <div className="flex flex-col items-center w-full">
       <AuthLogo />
@@ -156,13 +159,8 @@ export function LoginForm() {
         </Link>
       </p>
 
-      <div className="mt-6 w-full">
-        <p className="text-center text-sm text-gray-500 mb-4">o continúa con</p>
-        <SocialLoginButtons />
-      </div>
-
       <p className="mt-8 text-xs text-gray-400">
-        © 2024 TrackAid. Todos los derechos reservados.
+        © {currentYear} TrackAid. Todos los derechos reservados.
       </p>
 
       <ForgotPasswordModal

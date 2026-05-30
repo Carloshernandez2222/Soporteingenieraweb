@@ -7,6 +7,7 @@ from __future__ import annotations
 import os
 
 from sqlmodel import SQLModel, create_engine
+from sqlalchemy import text
 
 from ..config_paths import DEFAULT_SQLITE_PATH
 from ..utils.sqlserver import sqlalchemy_database_url
@@ -45,4 +46,22 @@ def init_db() -> None:
     """Crea tablas SQLModel si no existen (útil en SQLite / dev)."""
     from ..models import db_models  # noqa: F401
 
-    SQLModel.metadata.create_all(get_engine())
+    engine = get_engine()
+    SQLModel.metadata.create_all(engine)
+    _ensure_sqlite_phase2_schema(engine)
+
+
+def _ensure_sqlite_phase2_schema(engine) -> None:
+    """Compatibilidad local: agrega columnas nuevas en SQLite existente."""
+    url = create_database_url()
+    if not url.startswith("sqlite"):
+        return
+    with engine.begin() as conn:
+        rows = conn.execute(text('PRAGMA table_info("SupportCases")')).fetchall()
+        cols = {str(r[1]) for r in rows}
+        if "CompanyID" not in cols:
+            conn.execute(text('ALTER TABLE "SupportCases" ADD COLUMN "CompanyID" TEXT'))
+        if "AssignedTo" not in cols:
+            conn.execute(text('ALTER TABLE "SupportCases" ADD COLUMN "AssignedTo" TEXT'))
+        if "IsActive" not in cols:
+            conn.execute(text('ALTER TABLE "SupportCases" ADD COLUMN "IsActive" INTEGER DEFAULT 1'))

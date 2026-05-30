@@ -1,109 +1,57 @@
-from typing import Any, Optional
-from fastapi import APIRouter, Body, HTTPException, Query, status, Depends
-from pydantic import BaseModel
-from ..dependencies import get_servicio_registro_sqlite, get_servicio_soporte, get_servicio_taller
-from ..core.exceptions import CasoNoEncontradoError
-from ..models import CasoSoporte
-from ..patterns.adapter import obtener_adaptador
+from typing import Any
+from fastapi import APIRouter, HTTPException, status, Depends, Request
+from fastapi.templating import Jinja2Templates
+from datetime import datetime
+from pydantic import BaseModel, Field
+from ..dependencies import get_servicio_soporte
 
-router = APIRouter(prefix="/api/casos", tags=["casos"])
+router = APIRouter(prefix="/api/casos", tags=["Casos de Soporte"])
+templates = Jinja2Templates(directory="Backend/templates")
 
-# --- Modelos Pydantic para el Request Body ---
+# --- Modelos Pydantic ---
 class RegistroSoporteBody(BaseModel):
-    user_id: str
-    descripcion: str
-    order_id: Optional[str] = None
-    case_type: str = "General"
-    priority: str = "Medium"
+    user_id: str = Field(..., description="ID del usuario (UUID)")
+    descripcion: str = Field(..., description="Descripción detallada del problema")
+    case_type: str = Field(default="General", description="Tipo de caso")
 
-# --- Módulo: Casos del Taller (Temporales) ---
-
-@router.get("/taller", summary="Listar casos del taller")
-def obtener_todos_taller():
-    return {"status": "success", "data": get_servicio_taller().listar_todos()}
-
-@router.post("/taller", summary="Crear caso temporal", status_code=status.HTTP_201_CREATED)
-def crear_caso_taller(caso: CasoSoporte):
-    nuevo_registro = caso.model_dump()
-    nuevo_registro["plantilla"] = (caso.plantilla or "default").lower()
-    data = get_servicio_taller().crear(nuevo_registro)
-    return {"status": "success", "data": data}
-
-@router.post("/taller/integracion", summary="Crear caso vía e-commerce")
-def crear_caso_integracion(
-    payload: dict[str, Any] = Body(...),
-    origen: str = Query(..., description="Proveedor: amazon | shopify"),
-):
-    adaptador = obtener_adaptador(origen)
-    if not adaptador:
-        raise HTTPException(status_code=400, detail="Origen no soportado.")
-    registro = adaptador.traducir_payload(payload)
-    return {"status": "success", "origen": origen.lower(), "data": get_servicio_taller().crear(registro)}
-
-# --- Módulo: Soporte (Persistido en SQL Server) ---
-
+# --- Endpoints ---
 @router.post("/soporte", summary="Registrar caso de soporte", status_code=status.HTTP_201_CREATED)
 def api_registrar_soporte(
     payload: RegistroSoporteBody,
     servicio_soporte = Depends(get_servicio_soporte)
 ):
-    # Usamos el servicio de soporte refactorizado con SQL Server
-    resultado = servicio_soporte.registrar_caso(
-        user_id=payload.user_id, 
-        descripcion=payload.descripcion, 
-        order_id=payload.order_id,
-        case_type=payload.case_type,
-        priority=payload.priority
-    )
-    return {"status": "success", "data": resultado}
+    try:
+        resultado = servicio_soporte.registrar_caso(
+            user_id=payload.user_id, 
+            descripcion=payload.descripcion, 
+            case_type=payload.case_type
+        )
+        return {"status": "success", "data": resultado}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.get("/soporte", summary="Listar todos los tickets")
-def api_listar_soporte():
-    return {"status": "success", "data": get_servicio_soporte().listar_todos_casos()}
+def api_listar_soporte(servicio_soporte = Depends(get_servicio_soporte)):
+    return {"status": "success", "data": servicio_soporte.listar_todos_casos()}
 
-# --- NUEVO ENDPOINT: Listar tickets de un usuario ---
 @router.get("/soporte/mis-tickets/{user_id}", summary="Listar tickets de un usuario")
 def api_listar_mis_tickets(user_id: str, servicio_soporte = Depends(get_servicio_soporte)):
-    return {"status": "success", "data": servicio_soporte.listar_casos_usuario(user_id)}
+    try:
+        return {"status": "success", "data": servicio_soporte.listar_casos_usuario(user_id)}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.put("/soporte/{case_id}/cerrar", summary="Cerrar caso de soporte")
-def api_cerrar_caso(case_id: str):
-    get_servicio_soporte().cerrar_caso(case_id)
-    return {"status": "success", "message": "Caso cerrado correctamente."}
+def api_cerrar_caso(case_id: str, servicio_soporte = Depends(get_servicio_soporte)):
+    try:
+        servicio_soporte.cerrar_caso(case_id)
+        return {"status": "success", "message": "Caso cerrado correctamente."}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-# --- Métricas y Consultas (Composite Pattern) ---
-
-@router.get("/taller/metricas", summary="Métricas jerárquicas")
-def metricas_jerarquicas():
-    return {"status": "success", "data": get_servicio_taller().metricas_jerarquicas()}
-
-@router.get("/taller/filtrar", summary="Filtrar casos del taller por categoría")
-def filtrar_casos_taller(categoria: str | None = Query(None)):
-    return {"status": "success", "data": get_servicio_taller().filtrar_por_categoria(categoria)}
-
-
-@router.get("/taller/{id}", summary="Buscar caso del taller")
-def buscar_caso_taller(id: int):
-    registro = get_servicio_taller().obtener_por_id(id)
-    if not registro:
-        raise CasoNoEncontradoError("Caso no encontrado.")
-    return {"status": "success", "data": registro}
-
-
-# --- Registro web/chatbot (SQLite, lectura vía API) ---
-
-@router.get("/registro/tickets", summary="Listar tickets de registro (SQLite)")
-def api_registro_todos():
-    return {"status": "success", "data": get_servicio_registro_sqlite().listar_todos()}
-
-
-@router.get("/registro/tickets/por-email", summary="Tickets por correo (SQLite)")
-def api_registro_por_email(email: str = Query(...)):
-    data = get_servicio_registro_sqlite().listar_por_email(email)
-    return {"status": "success", "data": data}
-
-
-@router.get("/registro/tickets/{ticket_id}", summary="Detalle ticket registro (SQLite)")
-def api_registro_detalle(ticket_id: int):
-    data = get_servicio_registro_sqlite().obtener_por_id(ticket_id)
-    return {"status": "success", "data": data}
+@router.get("/reporte-pdf", summary="Generar reporte visual")
+async def generar_reporte(request: Request):
+    return templates.TemplateResponse("reporte.html", {
+        "request": request, 
+        "fecha": datetime.now().strftime("%Y-%m-%d %H:%M")
+    })

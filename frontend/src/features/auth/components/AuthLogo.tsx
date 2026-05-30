@@ -11,9 +11,9 @@ export function AuthLogo() {
       <img
         src={publicAsset("images/logo.png")}
         alt="TrackAid"
-        width={160}
-        height={48}
-        className="h-10 w-auto object-contain"
+        width={210}
+        height={62}
+        className="h-12 w-auto object-contain"
       />
     </Link>
   );

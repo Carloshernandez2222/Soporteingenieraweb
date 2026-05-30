@@ -80,13 +80,13 @@ function UsuarioPanelDemo() {
         </>
       }
     >
-      <header className="page-header embed-page-header">
+      <header className="page-header embed-page-header mb-2">
         <div>
           <h1 className="page-title">Resumen</h1>
           <p className="page-subtitle">Desde aquí abres un ticket o revisas lo que ya enviaste.</p>
         </div>
       </header>
-      <div className="embed-cards-grid">
+      <div className="embed-cards-grid mb-3">
         <div className="embed-panel-card">
           <p className="embed-panel-hint">Paso 1</p>
           <p className="embed-card-title">Nueva incidencia</p>
@@ -104,7 +104,7 @@ function UsuarioPanelDemo() {
         </div>
       </div>
 
-      <div className="embed-form-section">
+      <div className="embed-form-section mt-4">
         <div className="embed-form-section-head">
           <div className="embed-form-icon" aria-hidden>
             <IconTicket size={22} />
@@ -151,7 +151,7 @@ export function ProductoPreview() {
       aria-labelledby="producto-heading"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-2xl mb-8 md:mb-10">
+        <div className="max-w-2xl mb-10 md:mb-12">
           <h2 id="producto-heading" className="text-2xl md:text-3xl font-bold text-gray-850 tracking-tight">
             Así se ve TrackAid en uso
           </h2>
@@ -186,20 +186,22 @@ export function ProductoPreview() {
           </button>
         </div>
 
-        <div className="hidden lg:grid product-preview-dual">
-          <div>
+        <div className="hidden lg:grid product-preview-dual mt-2">
+          <div className="space-y-2">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Panel web</p>
             <UsuarioPanelDemo />
           </div>
-          <div>
+          <div className="space-y-2">
             <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
               Asistente · puedes escribir aquí
             </p>
-            <ChatEmbedShell variant="compact" showFooter={false} subtitle="Demo en vivo" />
+            <div className="max-w-[430px]">
+              <ChatEmbedShell variant="compact" showFooter={false} subtitle="Demo en vivo" />
+            </div>
           </div>
         </div>
 
-        <div className="min-w-0 lg:hidden" role="tabpanel">
+        <div className="min-w-0 lg:hidden mt-2" role="tabpanel">
           {tab === "panel" ? (
             <UsuarioPanelDemo />
           ) : (

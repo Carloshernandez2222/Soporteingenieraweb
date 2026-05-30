@@ -34,6 +34,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onSuccess }: ForgotPasswo
   const [newPasswordError, setNewPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [resetToken, setResetToken] = useState("");
+  const [tokenInput, setTokenInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
@@ -63,6 +64,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onSuccess }: ForgotPasswo
     }
     if (data?.resetToken) {
       setResetToken(data.resetToken);
+      setTokenInput(data.resetToken);
     }
     setStep("password");
   }
@@ -81,13 +83,13 @@ export function ForgotPasswordModal({ isOpen, onClose, onSuccess }: ForgotPasswo
       setConfirmPasswordError("La contraseña no coincide");
       return;
     }
-    if (!resetToken) {
+    if (!tokenInput.trim()) {
       setSubmitError("Solicite primero el restablecimiento con su correo.");
       return;
     }
     setLoading(true);
     const { data, error } = await apiResetPassword({
-      token: resetToken,
+      token: tokenInput.trim(),
       newPassword,
       confirmPassword,
     });
@@ -107,6 +109,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onSuccess }: ForgotPasswo
       setNewPassword("");
       setConfirmPassword("");
       setResetToken("");
+      setTokenInput("");
     }
   }
 
@@ -117,6 +120,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onSuccess }: ForgotPasswo
     setConfirmPasswordError("");
     setSubmitError("");
     setResetToken("");
+    setTokenInput("");
   }
 
   return (
@@ -129,7 +133,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onSuccess }: ForgotPasswo
         aria-modal="true"
       >
         <h2 id="modal-title" className="text-lg font-semibold text-gray-850">
-          Es necesario que cambie su contraseña por seguridad.
+          Recuperar contraseña
         </h2>
 
         {step === "email" ? (
@@ -158,8 +162,8 @@ export function ForgotPasswordModal({ isOpen, onClose, onSuccess }: ForgotPasswo
             />
             <p className="text-sm text-gray-600">
               Al hacer clic en &quot;Enviar correo&quot;, acepta nuestros{" "}
-              <a href="#terminos" className="text-teal-600 hover:underline">Términos de uso</a> y nuestra{" "}
-              <a href="#privacidad" className="text-teal-600 hover:underline">Política de privacidad</a>.
+              <a href="/terminos-y-condiciones" className="text-teal-600 hover:underline">Términos de uso</a> y nuestra{" "}
+              <a href="/politica-de-privacidad" className="text-teal-600 hover:underline">Política de Privacidad</a>.
             </p>
             <button
               type="submit"
@@ -174,6 +178,19 @@ export function ForgotPasswordModal({ isOpen, onClose, onSuccess }: ForgotPasswo
             {submitError && (
               <p className="text-sm text-red-500 bg-red-50 p-3 rounded-lg">{submitError}</p>
             )}
+            <InputField
+              label="Código de recuperación"
+              id="modal-reset-token"
+              name="resetToken"
+              placeholder="Pegue el código recibido"
+              value={tokenInput}
+              onChange={(e) => setTokenInput(e.target.value)}
+            />
+            {resetToken ? (
+              <p className="text-xs rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-amber-800">
+                Entorno demo: usamos un código temporal. Puede copiarlo desde este campo.
+              </p>
+            ) : null}
             <InputField
               label="Nueva contraseña"
               id="modal-new-password"
@@ -200,8 +217,8 @@ export function ForgotPasswordModal({ isOpen, onClose, onSuccess }: ForgotPasswo
             </ul>
             <p className="text-sm text-gray-600">
               Al hacer clic en &quot;Cambiar contraseña&quot;, acepta nuestros{" "}
-              <a href="#terminos" className="text-teal-600 hover:underline">Términos de uso</a> y nuestra{" "}
-              <a href="#privacidad" className="text-teal-600 hover:underline">Política de privacidad</a>.
+              <a href="/terminos-y-condiciones" className="text-teal-600 hover:underline">Términos de uso</a> y nuestra{" "}
+              <a href="/politica-de-privacidad" className="text-teal-600 hover:underline">Política de Privacidad</a>.
             </p>
             <button
               type="submit"

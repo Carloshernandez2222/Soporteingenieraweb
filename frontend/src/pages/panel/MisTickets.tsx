@@ -7,13 +7,12 @@ import PageHeader from "../../components/PageHeader";
 import Spinner from "../../components/Spinner";
 import { useDocumentTitle } from "../../hooks/useDocumentTitle";
 
-// Añadimos "description" al tipo de datos
 type CasoSoporteProf = {
   case_id: string;
   type: string;
   status: string;
   priority: string;
-  description: string; // <--- Nuevo campo
+  description: string;
   created_at: string;
 };
 
@@ -28,7 +27,6 @@ export default function MisTickets() {
 
   const buscarTickets = useCallback(async () => {
     if (!user?.id) return;
-    
     setFb(null);
     setLoad(true);
     try {
@@ -52,14 +50,8 @@ export default function MisTickets() {
       <PageHeader
         icon={<IconSearch size={26} />}
         title="Mis tickets"
-        subtitle="Consulta el historial de sus incidencias de soporte asignadas."
-        meta={
-          verApi ? (
-            <span className="badge ok" style={{ fontSize: "0.72rem" }}>
-              GET /api/casos/soporte/mis-tickets/{"{user_id}"}
-            </span>
-          ) : undefined
-        }
+        subtitle="Consulta el historial de tus incidencias."
+        meta={verApi ? <span className="badge ok" style={{ fontSize: "0.72rem" }}>GET /api/casos/soporte/mis-tickets/{"{user_id}"}</span> : undefined}
       />
 
       <div className="card animate-in" style={{ animationDelay: "0.05s" }}>
@@ -70,66 +62,42 @@ export default function MisTickets() {
           </button>
         </div>
 
-        {load && !lista && (
-          <div style={{ textAlign: "center", padding: "2rem" }}>
-            <Spinner /> Cargando tus tickets...
-          </div>
-        )}
-
-        {fb && (
-          <div className="feedback show err" role="alert">
-            {fb}
-          </div>
-        )}
+        {load && !lista && <div style={{ textAlign: "center", padding: "2rem" }}><Spinner /> Cargando tus tickets...</div>}
+        {fb && <div className="feedback show err" role="alert">{fb}</div>}
 
         {lista && !load && (
-          <div>
+          <div className="table-wrap max-h-[60vh] overflow-y-auto"> {/* Scroll habilitado */}
             {lista.length === 0 ? (
-              <div className="empty-state">No tienes tickets de soporte registrados.</div>
+              <div className="empty-state">No tienes tickets registrados.</div>
             ) : (
-              <>
-                <p className="hint" style={{ marginTop: 0 }}>
-                  {lista.length} ticket{lista.length !== 1 ? "s" : ""} encontrado{lista.length !== 1 ? "s" : ""}.
-                </p>
-                <div className="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>ID Ticket</th>
-                        <th>Descripción</th> {/* <--- Nueva cabecera */}
-                        <th>Tipo</th>
-                        <th>Prioridad</th>
-                        <th>Estado</th>
-                        <th>Fecha Creación</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {lista.map((r) => (
-                        <tr key={r.case_id}>
-                          <td>
-                            <strong>#{r.case_id.split("-")[0]}</strong>
-                          </td>
-                          <td style={{ maxWidth: "250px" }}> {/* <--- Nueva celda con la descripción */}
-                            {r.description ? (
-                              r.description.length > 50 
-                                ? r.description.slice(0, 50) + "..." 
-                                : r.description
-                            ) : "Sin descripción"}
-                          </td>
-                          <td>{r.type}</td>
-                          <td>
-                            <span className={`badge ${r.priority.toLowerCase() === 'high' ? 'err' : 'ok'}`}>
-                              {r.priority}
-                            </span>
-                          </td>
-                          <td>{r.status}</td>
-                          <td>{new Date(r.created_at).toLocaleDateString()}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
+              <table className="min-w-full">
+                <thead>
+                  <tr>
+                    <th>ID Ticket</th>
+                    <th>Descripción</th>
+                    <th>Tipo</th>
+                    <th>Prioridad</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lista.map((r) => (
+                    <tr key={r.case_id}>
+                      <td><strong>#{r.case_id.split("-")[0]}</strong></td>
+                      <td>{r.description.length > 50 ? r.description.slice(0, 50) + "..." : r.description}</td>
+                      <td>{r.type}</td>
+                      <td>
+                        <span className={`badge ${r.priority.toLowerCase() === 'high' ? 'err' : 'ok'}`}>
+                          {r.priority}
+                        </span>
+                      </td>
+                      <td>{r.status}</td>
+                      <td>{new Date(r.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
           </div>
         )}

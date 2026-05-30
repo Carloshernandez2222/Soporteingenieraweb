@@ -37,7 +37,7 @@ export default function TallerFiltrar() {
       <PageHeader
         icon={<IconSearch size={26} />}
         title="Filtrar por categoría"
-        subtitle="Comparación sin distinguir mayúsculas. Si deja el campo vacío, se obtiene el listado completo desde SQLite."
+        subtitle="Comparación sin distinguir mayúsculas. Si deja el campo vacío, se muestra el listado completo."
         meta={
           verApi ? (
             <span className="badge ok" style={{ fontSize: "0.72rem" }}>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { AuthLogo } from "@/features/auth";
-import { IconClipboard, IconHealth, IconSearch, IconTicket } from "@/components/Icons";
+import { IconClipboard, IconSearch, IconTicket } from "@/components/Icons";
 import { useAuth } from "@/context/AuthContext";
 import { usePanelTheme } from "@/context/PanelThemeContext";
 import { etiquetaRol, normalizarRol, type RolUsuario } from "@/lib/roles";
@@ -10,7 +10,7 @@ const navCls = ({ isActive }: { isActive: boolean }) =>
   `nav-link${isActive ? " active" : ""}`;
 
 export default function DashboardLayout() {
-  const { user, logout, syncUserFromServer } = useAuth();
+  const { user, logout } = useAuth();
   const { mode, setMode } = usePanelTheme();
   const navigate = useNavigate();
   const rol: RolUsuario = user ? normalizarRol(user.rol) : "usuario";
@@ -24,14 +24,10 @@ export default function DashboardLayout() {
   }, []);
 
   return (
-    <div
-      className={`panel-theme app-shell${mode === "light" ? " panel-theme--light" : ""}`}
-    >
+    <div className={`panel-theme app-shell${mode === "light" ? " panel-theme--light" : ""}`}>
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-logo">
-            <AuthLogo />
-          </div>
+          <div className="brand-logo"><AuthLogo /></div>
           <p className="brand-tagline">Centro de soporte</p>
         </div>
 
@@ -39,93 +35,17 @@ export default function DashboardLayout() {
           <div className="sidebar-user" style={{ padding: "0 0.35rem" }}>
             <p className="hint" style={{ margin: "0 0 0.5rem", fontSize: "0.8rem" }}>
               {user.email}
+              {user.companyName ? <><br /><span>{user.companyName}</span></> : null}
             </p>
-            <p
-              className="sidebar-role"
-              style={{
-                margin: "0 0 0.65rem",
-                fontSize: "0.8rem",
-                color: "var(--text)",
-              }}
-            >
+            <p className="sidebar-role" style={{ margin: "0 0 0.65rem", fontSize: "0.8rem", color: "var(--text)" }}>
               <span className="badge ok" style={{ fontSize: "0.72rem", fontWeight: 600 }}>
                 {etiquetaRol(user.rol)}
               </span>
             </p>
-            <button
-              type="button"
-              className="btn secondary"
-              style={{ width: "100%", fontSize: "0.85rem", padding: "0.5rem 0.75rem" }}
-              onClick={() => {
-                logout();
-                navigate("/", { replace: true });
-              }}
-            >
+            <button type="button" className="btn secondary" style={{ width: "100%", fontSize: "0.85rem", padding: "0.5rem 0.75rem" }}
+              onClick={() => { logout(); navigate("/", { replace: true }); }}>
               Cerrar sesión
             </button>
-            <details style={{ marginTop: "0.65rem", fontSize: "0.75rem" }}>
-              <summary className="hint" style={{ cursor: "pointer", userSelect: "none" }}>
-                Actualizar rol desde la base de datos
-              </summary>
-              <p className="hint" style={{ margin: "0.5rem 0 0.35rem", lineHeight: 1.4 }}>
-                Si cambió el rol en SQLite, la sesión guardada puede estar desactualizada. Confirme contraseña para
-                volver a cargar perfil (mismo flujo que el login).
-              </p>
-              <input
-                type="password"
-                autoComplete="current-password"
-                placeholder="Contraseña"
-                value={syncPw}
-                onChange={(e) => setSyncPw(e.target.value)}
-                style={{
-                  width: "100%",
-                  marginBottom: "0.35rem",
-                  padding: "0.35rem 0.5rem",
-                  fontSize: "0.8rem",
-                  borderRadius: 6,
-                  border: "1px solid var(--border, #333)",
-                  background: "var(--surface, #1a1a1a)",
-                  color: "inherit",
-                }}
-              />
-              <button
-                type="button"
-                className="btn secondary"
-                style={{ width: "100%", fontSize: "0.8rem", padding: "0.4rem 0.6rem" }}
-                disabled={syncLoad}
-                onClick={() => {
-                  void (async () => {
-                    setSyncFb(null);
-                    setSyncOk(false);
-                    setSyncLoad(true);
-                    const r = await syncUserFromServer(syncPw);
-                    setSyncLoad(false);
-                    if (r.ok) {
-                      setSyncPw("");
-                      setSyncOk(true);
-                      setSyncFb("Perfil actualizado. El menú refleja el rol actual.");
-                    } else {
-                      setSyncOk(false);
-                      setSyncFb(r.message);
-                    }
-                  })();
-                }}
-              >
-                {syncLoad ? "Comprobando…" : "Sincronizar sesión"}
-              </button>
-              {syncFb && (
-                <p
-                  className="hint"
-                  style={{
-                    margin: "0.35rem 0 0",
-                    color: syncOk ? "var(--ok, #6ee7b7)" : "var(--err, #fca5a5)",
-                  }}
-                  role="status"
-                >
-                  {syncFb}
-                </p>
-              )}
-            </details>
           </div>
         )}
 
@@ -133,81 +53,34 @@ export default function DashboardLayout() {
           <div className="nav-section">
             <div className="nav-label">Panel</div>
             <NavLink to="/panel" end className={navCls}>
-              <IconTicket size={18} />
-              Inicio
+              <IconTicket size={18} /> Inicio
             </NavLink>
           </div>
 
           {rol === "usuario" && (
             <div className="nav-section">
-              <div className="nav-label">Mis tickets</div>
+              <div className="nav-label">Atención</div>
               <NavLink to="/panel/nuevo-ticket" end className={navCls}>
-                <IconTicket size={18} />
-                Nuevo ticket
+                <IconTicket size={18} /> Crear solicitud
               </NavLink>
               <NavLink to="/panel/mis-tickets" className={navCls}>
-                <IconSearch size={18} />
-                Buscar mis tickets
+                <IconSearch size={18} /> Mis solicitudes
               </NavLink>
             </div>
           )}
 
-          {rol === "soporte" && (
-            <>
-              <div className="nav-section">
-                <div className="nav-label">Consultas</div>
-                <NavLink to="/consultar" className={navCls}>
-                  <IconSearch size={18} />
-                  Consultas y seguimiento
-                </NavLink>
-              </div>
-              <div className="nav-section">
-                <div className="nav-label">Taller (SQLite)</div>
-                <NavLink to="/taller/crear" className={navCls}>
-                  <IconClipboard size={18} />
-                  Crear caso
-                </NavLink>
-                <NavLink to="/taller/lista" className={navCls}>
-                  <IconClipboard size={18} />
-                  Listado
-                </NavLink>
-                <NavLink to="/taller/filtrar" className={navCls}>
-                  <IconSearch size={18} />
-                  Por categoría
-                </NavLink>
-                <NavLink to="/taller/integracion" className={navCls}>
-                  <IconClipboard size={18} />
-                  Integración e-commerce
-                </NavLink>
-                <NavLink to="/taller/metricas" className={navCls}>
-                  <IconClipboard size={18} />
-                  Métricas (Composite)
-                </NavLink>
-              </div>
-            </>
-          )}
-
           {rol === "webmaster" && (
             <div className="nav-section">
-              <div className="nav-label">Tickets globales</div>
+              <div className="nav-label">Administración</div>
               <NavLink to="/panel/tickets" className={navCls}>
-                <IconTicket size={18} />
-                Todos los tickets
+                <IconTicket size={18} /> Todas las solicitudes
               </NavLink>
-            </div>
-          )}
-
-          {rol === "webmaster" && (
-            <div className="nav-section">
-              <div className="nav-label">Sistema</div>
-              <NavLink to="/salud" className={navCls}>
-                <IconHealth size={18} />
-                Estado del API
+              <NavLink to="/panel/admin/companias" className={navCls}>
+                <IconClipboard size={18} /> Compañías
               </NavLink>
-              <a className="nav-link" href="/docs" target="_blank" rel="noreferrer">
-                <IconClipboard size={18} />
-                Documentación OpenAPI
-              </a>
+              <NavLink to="/panel/admin/usuarios" className={navCls}>
+                <IconClipboard size={18} /> Usuarios
+              </NavLink>
             </div>
           )}
         </nav>
@@ -215,28 +88,16 @@ export default function DashboardLayout() {
         <footer className="sidebar-footer theme-footer" aria-label="Apariencia del panel">
           <span className="theme-footer-label">Apariencia</span>
           <div className="theme-toggle" role="group" aria-label="Modo claro u oscuro">
-            <button
-              type="button"
-              className={`theme-toggle-btn${mode === "light" ? " is-active" : ""}`}
-              onClick={() => setMode("light")}
-              aria-pressed={mode === "light"}
-            >
-              Claro
-            </button>
-            <button
-              type="button"
-              className={`theme-toggle-btn${mode === "dark" ? " is-active" : ""}`}
-              onClick={() => setMode("dark")}
-              aria-pressed={mode === "dark"}
-            >
-              Oscuro
-            </button>
+            <button type="button" className={`theme-toggle-btn${mode === "light" ? " is-active" : ""}`} onClick={() => setMode("light")}>Claro</button>
+            <button type="button" className={`theme-toggle-btn${mode === "dark" ? " is-active" : ""}`} onClick={() => setMode("dark")}>Oscuro</button>
           </div>
         </footer>
       </aside>
 
-      <main className="main-area">
-        <Outlet />
+      <main className="main-area flex-1 w-full overflow-y-auto bg-transparent">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
