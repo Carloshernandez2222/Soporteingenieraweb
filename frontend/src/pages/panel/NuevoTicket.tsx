@@ -38,7 +38,6 @@ export default function NuevoTicket() {
     setLoading(true);
 
     try {
-      // El payload debe coincidir con el modelo RegistroSoporteBody de tu backend
       const payload = {
         user_id: user.id, 
         descripcion: descripcion,
@@ -52,7 +51,6 @@ export default function NuevoTicket() {
       form.reset();
       setDescLen(0);
     } catch (err: any) {
-      // Intentamos extraer el mensaje del backend o fallback al error genérico
       const errorMsg = err?.response?.data?.message || err?.message || "Error al registrar el ticket.";
       setFb({ kind: "err", text: errorMsg });
     } finally {

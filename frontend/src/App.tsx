@@ -5,18 +5,21 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import IniciarSesion from "./pages/IniciarSesion";
 import DemoChatbot from "./pages/DemoChatbot";
 import Landing from "./pages/Landing";
+import PlanStartups from "./pages/PlanStartups";
+import TerminosCondiciones from "./pages/TerminosCondiciones";
+import PoliticaPrivacidad from "./pages/PoliticaPrivacidad";
 import RegistroCuenta from "./pages/RegistroCuenta";
 import Consultar from "./pages/panel/Consultar";
 import MisTickets from "./pages/panel/MisTickets";
 import NuevoTicket from "./pages/panel/NuevoTicket";
 import PanelHome from "./pages/panel/PanelHome";
-import Salud from "./pages/panel/Salud";
+import AsistentePanel from "./pages/panel/AsistentePanel";
 import TallerCrear from "./pages/panel/TallerCrear";
 import TallerFiltrar from "./pages/panel/TallerFiltrar";
-import TallerIntegracion from "./pages/panel/TallerIntegracion";
-import TallerLista from "./pages/panel/TallerLista";
 import TallerMetricas from "./pages/panel/TallerMetricas";
 import TicketsGenerales from "./pages/panel/TicketsGenerales";
+import AdminCompanias from "./pages/panel/AdminCompanias";
+import AdminUsuarios from "./pages/panel/AdminUsuarios";
 
 /** Contenedor visual común de la zona pública (solo Tailwind). */
 function PublicChrome() {
@@ -38,6 +41,9 @@ export default function App() {
         <Route path="/producto" element={<Navigate to="/#producto" replace />} />
         <Route path="/iniciar-sesion" element={<IniciarSesion />} />
         <Route path="/registro" element={<RegistroCuenta />} />
+        <Route path="/terminos-y-condiciones" element={<TerminosCondiciones />} />
+        <Route path="/politica-de-privacidad" element={<PoliticaPrivacidad />} />
+        <Route path="/planes/startups" element={<PlanStartups />} />
         <Route path="/demo" element={<DemoChatbot />} />
       </Route>
 
@@ -51,6 +57,7 @@ export default function App() {
 
           <Route element={<RequireRole allow={["usuario"]} />}>
             <Route path="/panel/mis-tickets" element={<MisTickets />} />
+            <Route path="/panel/asistente" element={<AsistentePanel />} />
           </Route>
 
           <Route element={<RequireRole allow={["soporte"]} />}>
@@ -59,15 +66,14 @@ export default function App() {
           </Route>
 
           <Route element={<RequireRole allow={["soporte"]} />}>
-            <Route path="/taller/lista" element={<TallerLista />} />
             <Route path="/taller/filtrar" element={<TallerFiltrar />} />
-            <Route path="/taller/integracion" element={<TallerIntegracion />} />
             <Route path="/taller/metricas" element={<TallerMetricas />} />
           </Route>
 
           <Route element={<RequireRole allow={["webmaster"]} />}>
             <Route path="/panel/tickets" element={<TicketsGenerales />} />
-            <Route path="/salud" element={<Salud />} />
+            <Route path="/panel/admin/companias" element={<AdminCompanias />} />
+            <Route path="/panel/admin/usuarios" element={<AdminUsuarios />} />
           </Route>
         </Route>
       </Route>

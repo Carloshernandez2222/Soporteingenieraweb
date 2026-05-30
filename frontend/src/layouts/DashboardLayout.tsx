@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { AuthLogo } from "@/features/auth";
-import { IconClipboard, IconHealth, IconSearch, IconTicket } from "@/components/Icons";
+import { IconClipboard, IconSearch, IconTicket } from "@/components/Icons";
 import { useAuth } from "@/context/AuthContext";
 import { usePanelTheme } from "@/context/PanelThemeContext";
 import { etiquetaRol, normalizarRol, type RolUsuario } from "@/lib/roles";
@@ -39,6 +39,12 @@ export default function DashboardLayout() {
           <div className="sidebar-user" style={{ padding: "0 0.35rem" }}>
             <p className="hint" style={{ margin: "0 0 0.5rem", fontSize: "0.8rem" }}>
               {user.email}
+              {user.companyName ? (
+                <>
+                  <br />
+                  <span>{user.companyName}</span>
+                </>
+              ) : null}
             </p>
             <p
               className="sidebar-role"
@@ -65,11 +71,10 @@ export default function DashboardLayout() {
             </button>
             <details style={{ marginTop: "0.65rem", fontSize: "0.75rem" }}>
               <summary className="hint" style={{ cursor: "pointer", userSelect: "none" }}>
-                Actualizar rol desde la base de datos
+                Actualizar permisos
               </summary>
               <p className="hint" style={{ margin: "0.5rem 0 0.35rem", lineHeight: 1.4 }}>
-                Si cambió el rol en SQLite, la sesión guardada puede estar desactualizada. Confirme contraseña para
-                volver a cargar perfil (mismo flujo que el login).
+                Si te cambiaron el perfil, actualiza aquí para refrescar tu acceso actual.
               </p>
               <input
                 type="password"
@@ -140,14 +145,18 @@ export default function DashboardLayout() {
 
           {rol === "usuario" && (
             <div className="nav-section">
-              <div className="nav-label">Mis tickets</div>
+              <div className="nav-label">Atención</div>
               <NavLink to="/panel/nuevo-ticket" end className={navCls}>
                 <IconTicket size={18} />
-                Nuevo ticket
+                Crear solicitud
               </NavLink>
               <NavLink to="/panel/mis-tickets" className={navCls}>
                 <IconSearch size={18} />
-                Buscar mis tickets
+                Mis solicitudes
+              </NavLink>
+              <NavLink to="/panel/asistente" className={navCls}>
+                <IconClipboard size={18} />
+                Asistente
               </NavLink>
             </div>
           )}
@@ -155,33 +164,25 @@ export default function DashboardLayout() {
           {rol === "soporte" && (
             <>
               <div className="nav-section">
-                <div className="nav-label">Consultas</div>
+                <div className="nav-label">Gestión</div>
                 <NavLink to="/consultar" className={navCls}>
                   <IconSearch size={18} />
-                  Consultas y seguimiento
+                  Seguimiento de solicitudes
                 </NavLink>
               </div>
               <div className="nav-section">
-                <div className="nav-label">Taller (SQLite)</div>
+                <div className="nav-label">Operación</div>
                 <NavLink to="/taller/crear" className={navCls}>
                   <IconClipboard size={18} />
-                  Crear caso
-                </NavLink>
-                <NavLink to="/taller/lista" className={navCls}>
-                  <IconClipboard size={18} />
-                  Listado
+                  Crear caso interno
                 </NavLink>
                 <NavLink to="/taller/filtrar" className={navCls}>
                   <IconSearch size={18} />
-                  Por categoría
-                </NavLink>
-                <NavLink to="/taller/integracion" className={navCls}>
-                  <IconClipboard size={18} />
-                  Integración e-commerce
+                  Filtrar casos
                 </NavLink>
                 <NavLink to="/taller/metricas" className={navCls}>
                   <IconClipboard size={18} />
-                  Métricas (Composite)
+                  Resumen
                 </NavLink>
               </div>
             </>
@@ -189,27 +190,22 @@ export default function DashboardLayout() {
 
           {rol === "webmaster" && (
             <div className="nav-section">
-              <div className="nav-label">Tickets globales</div>
+              <div className="nav-label">Administración</div>
               <NavLink to="/panel/tickets" className={navCls}>
                 <IconTicket size={18} />
-                Todos los tickets
+                Todas las solicitudes
+              </NavLink>
+              <NavLink to="/panel/admin/companias" className={navCls}>
+                <IconClipboard size={18} />
+                Compañías
+              </NavLink>
+              <NavLink to="/panel/admin/usuarios" className={navCls}>
+                <IconClipboard size={18} />
+                Usuarios
               </NavLink>
             </div>
           )}
 
-          {rol === "webmaster" && (
-            <div className="nav-section">
-              <div className="nav-label">Sistema</div>
-              <NavLink to="/salud" className={navCls}>
-                <IconHealth size={18} />
-                Estado del API
-              </NavLink>
-              <a className="nav-link" href="/docs" target="_blank" rel="noreferrer">
-                <IconClipboard size={18} />
-                Documentación OpenAPI
-              </a>
-            </div>
-          )}
         </nav>
 
         <footer className="sidebar-footer theme-footer" aria-label="Apariencia del panel">

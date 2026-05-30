@@ -1,7 +1,7 @@
 import re
 from typing import Self
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ..constants import MAX_EMAIL_LEN, MAX_NOMBRE_LEN
 
@@ -16,9 +16,12 @@ def _password_rules(password: str) -> None:
 
 
 class RegisterBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     nombre: str = Field(min_length=1, max_length=MAX_NOMBRE_LEN)
     apellidos: str = Field(min_length=1, max_length=MAX_NOMBRE_LEN)
     email: str = Field(min_length=1, max_length=MAX_EMAIL_LEN)
+    companyKey: str = Field(min_length=8, max_length=80)
     password: str = Field(min_length=8, max_length=128)
     confirmPassword: str = Field(min_length=1, max_length=128)
     acceptTerms: bool
@@ -27,6 +30,15 @@ class RegisterBody(BaseModel):
     @classmethod
     def strip_nombres(cls, v: str) -> str:
         return (v or "").strip()
+
+    @field_validator("companyKey")
+    @classmethod
+    def sanitize_company_key(cls, v: str) -> str:
+        key = re.sub(r"\s+", "-", v.strip().lower())
+        key = re.sub(r"[^a-z0-9\-_.]", "", key)
+        if not key or len(key) < 8:
+            raise ValueError("La llave de compañía debe tener al menos 8 caracteres.")
+        return key
 
     @field_validator("password")
     @classmethod

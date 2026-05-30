@@ -43,6 +43,10 @@ cd frontend && npm install && npm run dev
 - SQL Server (auth + casos `/api/casos/soporte`): `SQLSERVER_HOST`, `SQLSERVER_DATABASE`, `SQLSERVER_USER`, `SQLSERVER_PASSWORD` (o `DATABASE_URL` completa). Sin contraseña en código: usar variables de entorno o Azure App Settings.
 - Rutas del panel bajo `/api/casos/*` (MVC). Las rutas `/casos/*` legacy siguen activas por compatibilidad.
 - Arranque con **Gunicorn + Uvicorn** sin cambios: `startup.sh` → `Backend.conection:test`.
+- Si los **POST** fallan en SQL Server ya existente, aplicar `scripts/migrate-unified-users.sql` (también lo ejecuta `codespace-init-db.sh`).
+- Verificación local de API:
+  - Rápida: `bash scripts/verify-api.sh http://127.0.0.1:8013`
+  - Completa (51 rutas): `python3 scripts/verify-api-full.py http://127.0.0.1:8013` (con el backend en marcha).
 
 ### Cuentas demo del panel (misma contraseña)
 

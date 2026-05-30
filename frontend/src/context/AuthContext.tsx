@@ -1,11 +1,12 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import type { UserResponse } from "@/lib/trackaidApi";
 import { login as apiLogin } from "@/lib/trackaidApi";
+import { setAccessToken } from "@/lib/authToken";
 import { normalizarRol } from "@/lib/roles";
 
 const STORAGE_KEY = "trackaid_auth_user";
 /** Si cambia, se invalida localStorage y hay que volver a iniciar sesión (evita rol obsoleto o sin campo `rol`). */
-const AUTH_STORE_VERSION = 2;
+const AUTH_STORE_VERSION = 3;
 
 function readStoredUser(): UserResponse | null {
   try {
@@ -32,7 +33,7 @@ type SyncResult = { ok: true } | { ok: false; message: string };
 
 type AuthContextValue = {
   user: UserResponse | null;
-  setUser: (u: UserResponse | null) => void;
+  setUser: (u: UserResponse | null, accessToken?: string | null) => void;
   logout: () => void;
   /** Tras cambiar `rol` (u otros datos) en SQLite, vuelve a autenticar y actualiza localStorage. */
   syncUserFromServer: (password: string) => Promise<SyncResult>;
@@ -43,7 +44,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUserState] = useState<UserResponse | null>(readStoredUser);
 
-  const setUser = useCallback((u: UserResponse | null) => {
+  const setUser = useCallback((u: UserResponse | null, accessToken?: string | null) => {
     if (u) {
       const normalized: UserResponse = {
         ...u,
@@ -54,15 +55,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         STORAGE_KEY,
         JSON.stringify({ ...normalized, v: AUTH_STORE_VERSION })
       );
+      if (accessToken !== undefined) {
+        setAccessToken(accessToken);
+      }
     } else {
       setUserState(null);
       localStorage.removeItem(STORAGE_KEY);
+      setAccessToken(null);
     }
   }, []);
 
   const logout = useCallback(() => {
     setUserState(null);
     localStorage.removeItem(STORAGE_KEY);
+    setAccessToken(null);
   }, []);
 
   const syncUserFromServer = useCallback(
@@ -74,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { ok: false, message: error.message ?? "No se pudo sincronizar." };
       }
       if (data?.success && data.user) {
-        setUser(data.user);
+        setUser(data.user, data.accessToken);
         return { ok: true };
       }
       return { ok: false, message: "Respuesta inesperada del servidor." };

@@ -35,7 +35,7 @@ export default function TallerCrear() {
       const res = await crearCasoTaller(body);
       setFb({
         kind: "ok",
-        text: `Registro guardado en SQLite (taller): id ${res.data.id}, cliente «${res.data.cliente}», categoría «${res.data.categoria}».`,
+        text: `Registro guardado: id ${res.data.id}, cliente «${res.data.cliente}», categoría «${res.data.categoria}».`,
       });
       form.reset();
     } catch (err) {
@@ -49,8 +49,8 @@ export default function TallerCrear() {
     <>
       <PageHeader
         icon={<IconClipboard size={26} />}
-        title="Alta de caso (taller)"
-        subtitle="Prototype: elige plantilla e-commerce (default, Amazon, Shopify) y ajusta los datos. El id debe ser único."
+        title="Alta de caso"
+        subtitle="Elige la plantilla de tienda y ajusta los datos. El id debe ser único."
         meta={
           verApi ? (
             <span className="badge ok" style={{ fontSize: "0.72rem" }}>
@@ -81,7 +81,7 @@ export default function TallerCrear() {
             </div>
           </div>
           <div className="field">
-            <label htmlFor="plantilla">Plantilla (Prototype)</label>
+            <label htmlFor="plantilla">Plantilla</label>
             <select id="plantilla" name="plantilla" defaultValue="default">
               <option value="default">Genérica</option>
               <option value="amazon">Amazon</option>

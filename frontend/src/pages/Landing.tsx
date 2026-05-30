@@ -15,7 +15,7 @@ import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 export default function Landing() {
   useDocumentTitle("TrackAid");
   return (
-    <main>
+    <main className="overflow-x-hidden">
       <Header />
       <Hero />
       <PotencialesClientes />

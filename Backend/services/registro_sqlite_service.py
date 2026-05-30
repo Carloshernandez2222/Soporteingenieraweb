@@ -55,15 +55,29 @@ class ServicioRegistroSqlite:
         for obs in self._observadores:
             obs.actualizar(evento, datos)
 
-    def _validar_entrada(self, nombre: str, email: str, descripcion: str) -> tuple[str, str, str]:
+    def _validar_entrada(
+        self,
+        nombre: str,
+        email: str,
+        descripcion: str,
+        *,
+        origen_chatbot: bool = False,
+    ) -> tuple[str, str, str]:
         nombre_t = (nombre or "").strip()
+        if not nombre_t:
+            nombre_t = "Usuario Chatbot" if origen_chatbot else ""
         if not nombre_t:
             raise NombreInvalidoError("El nombre no puede estar vacío.")
         if re.search(r"\d", nombre_t):
-            raise NombreInvalidoError("El nombre no puede contener números.")
+            if origen_chatbot:
+                nombre_t = re.sub(r"\d+", " ", nombre_t).strip() or "Usuario Chatbot"
+            else:
+                raise NombreInvalidoError("El nombre no puede contener números.")
         descripcion_t = (descripcion or "").strip()
         if not descripcion_t:
             raise IssueInvalidoError("La descripción no puede estar vacía.")
+        if origen_chatbot and len(descripcion_t) < 3:
+            raise IssueInvalidoError("Cuéntanos un poco más sobre el problema.")
         email_norm = validar_y_normalizar_correo(email)
         return nombre_t, email_norm, descripcion_t
 
@@ -75,7 +89,10 @@ class ServicioRegistroSqlite:
         categoria: str | None = None,
         creado_por_rol: str = "usuario",
     ) -> dict[str, Any]:
-        nombre_t, email_norm, descripcion_t = self._validar_entrada(nombre, email, descripcion)
+        es_chatbot = (creado_por_rol or "").strip().lower() == "chatbot"
+        nombre_t, email_norm, descripcion_t = self._validar_entrada(
+            nombre, email, descripcion, origen_chatbot=es_chatbot
+        )
         cat = (categoria or "general").strip() or "general"
         rol = (creado_por_rol or "usuario").strip() or "usuario"
         created = time.time()

@@ -39,7 +39,7 @@ export function PotencialesClientes() {
         <p className="mt-3 text-gray-600">Pensado para operaciones como:</p>
       </div>
 
-      <div className="relative w-full overflow-hidden -mx-4 sm:-mx-6 lg:-mx-8" aria-hidden>
+      <div className="relative w-full overflow-hidden sm:-mx-6 lg:-mx-8" aria-hidden>
         <div
           className="pointer-events-none absolute inset-y-0 left-0 w-12 sm:w-20 bg-gradient-to-r from-gray-50/95 to-transparent z-10"
           aria-hidden

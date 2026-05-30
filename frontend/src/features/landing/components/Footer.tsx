@@ -1,19 +1,27 @@
 
+import { Link } from "react-router-dom";
+import { publicAsset } from "@/lib/assets";
+
 const COMPANY_LINKS = [
-  { href: "#about", label: "About us" },
-  { href: "#blog", label: "Blog" },
-  { href: "#contact", label: "Contact us" },
-  { href: "#precios", label: "Pricing" },
-  { href: "#testimonials", label: "Testimonials" },
+  { href: "/#home", label: "Inicio" },
+  { href: "/#asistente", label: "Asistente" },
+  { href: "/#producto", label: "Producto" },
+  { href: "/#precios", label: "Planes" },
+  { href: "/#beneficios", label: "Beneficios" },
 ];
 
 const SUPPORT_LINKS = [
-  { href: "#help", label: "Help center" },
-  { href: "#terms", label: "Terms of service" },
-  { href: "#legal", label: "Legal" },
-  { href: "#privacy", label: "Privacy policy" },
-  { href: "#status", label: "Status" },
+  { href: "/iniciar-sesion", label: "Iniciar sesión" },
+  { href: "/registro", label: "Crear cuenta" },
+  { href: "/demo", label: "Demo chatbot" },
+  { href: "/#precios", label: "Comparar planes" },
 ];
+
+const WHATSAPP_NUMBER = "573001234567";
+const WHATSAPP_MSG = encodeURIComponent(
+  "Hola, quiero asesoría sobre TrackAid para mi operación."
+);
+const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MSG}`;
 
 const SOCIAL = [
   { href: "#", label: "Instagram", icon: "M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948 2.597 7.617 6.417 11.45 14.004 11.717C15.336 28.667 15.75 28.68 19 28.68c3.259 0 3.668-.014 4.948-.072 7.618-2.597 11.45-6.418 11.718-14.005.058-1.335.072-1.746.072-4.948 0-3.259-.014-3.667-.072-4.947-2.597-7.617-6.417-11.45-14.004-11.717C24.664.273 24.25.26 21 .26c-3.259 0-3.667.014-4.948.072C8.333.272 2.695 2.69.273 7.052.014 8.333 0 8.741 0 12" },
@@ -28,8 +36,17 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <div className="space-y-4">
-            <p className="text-gray-300 text-sm">Copyright © 2020 TrackAid Ltd.</p>
-            <p className="text-gray-400 text-sm">All rights reserved</p>
+            <Link to="/" className="inline-flex items-center" aria-label="TrackAid">
+              <img
+                src={publicAsset("images/logo.png")}
+                alt="TrackAid"
+                width={220}
+                height={64}
+                className="h-14 w-auto object-contain"
+              />
+            </Link>
+            <p className="text-gray-300 text-sm">Copyright © {new Date().getFullYear()} TrackAid.</p>
+            <p className="text-gray-400 text-sm">Soporte para operaciones eCommerce.</p>
             <div className="flex gap-4 pt-2">
               {SOCIAL.map(({ href, label }) => (
                 <a
@@ -48,10 +65,7 @@ export function Footer() {
             <ul className="space-y-2">
               {COMPANY_LINKS.map(({ href, label }) => (
                 <li key={label}>
-                  <a
-                    href={href}
-                    className="text-gray-400 hover:text-white transition-colors text-sm"
-                  >
+                  <a href={href} className="text-gray-400 hover:text-white transition-colors text-sm">
                     {label}
                   </a>
                 </li>
@@ -63,10 +77,7 @@ export function Footer() {
             <ul className="space-y-2">
               {SUPPORT_LINKS.map(({ href, label }) => (
                 <li key={label}>
-                  <a
-                    href={href}
-                    className="text-gray-400 hover:text-white transition-colors text-sm"
-                  >
+                  <a href={href} className="text-gray-400 hover:text-white transition-colors text-sm">
                     {label}
                   </a>
                 </li>
@@ -74,34 +85,21 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h3 className="font-semibold text-white mb-4">Stay up to date</h3>
-            <form className="flex gap-2" onSubmit={(e) => e.preventDefault()}>
-              <input
-                type="email"
-                placeholder="Your email address"
-                className="flex-1 px-4 py-2.5 rounded-full bg-gray-800 border border-gray-700 text-white placeholder-gray-500 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                aria-label="Email para suscripción"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2.5 bg-primary rounded-full hover:bg-primary-dark transition-colors"
-                aria-label="Enviar"
-              >
-                <svg
-                  className="w-5 h-5 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14 5l7 7m0 0l-7 7m7-7H3"
-                  />
-                </svg>
-              </button>
-            </form>
+            <h3 className="font-semibold text-white mb-4">Contáctanos</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              ¿Quieres asesoría para implementar TrackAid en tu operación?
+            </p>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center w-full rounded-full py-3 px-5 bg-[#25D366] text-[#0b1f14] font-semibold hover:brightness-95 transition-all"
+            >
+              Hablar por WhatsApp
+            </a>
+            <p className="text-xs text-gray-500 mt-2">
+              Reemplaza el número en `Footer.tsx` por tu WhatsApp real.
+            </p>
           </div>
         </div>
       </div>

@@ -16,13 +16,20 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .config_paths import FRONTEND_ASSETS_DIR, FRONTEND_IMAGES_DIR
 from .core.database import init_db
+from .controllers.admin_controller import router as admin_router
 from .controllers.auth_controller import router as auth_router
 from .controllers.casos_controller import router as casos_router
+from .controllers.companies_controller import router as companies_router
 from .controllers.health_controller import router as health_router
 from .controllers.legacy_casos_controller import router as legacy_casos_router
 from .controllers.registro_controller import router as registro_router
 from .controllers.spa_controller import router as spa_router
 
+from .core.exceptions_companies import (
+    CompanyInactiveError,
+    CompanyKeyInUseError,
+    CompanyNotFoundError,
+)
 from .core.exceptions import (
     CasoNoEncontradoError,
     CorreoInvalidoError,
@@ -142,11 +149,25 @@ def create_app() -> FastAPI:
     async def id_duplicado_handler(request: Request, exc: IdDuplicadoError):
         return JSONResponse(status_code=409, content={"status": "error", "message": str(exc)})
 
+    @app.exception_handler(CompanyNotFoundError)
+    async def company_not_found(request: Request, exc: CompanyNotFoundError):
+        return JSONResponse(status_code=404, content={"code": "COMPANY_NOT_FOUND", "message": str(exc)})
+
+    @app.exception_handler(CompanyKeyInUseError)
+    async def company_key_in_use(request: Request, exc: CompanyKeyInUseError):
+        return JSONResponse(status_code=409, content={"code": "COMPANY_KEY_IN_USE", "message": str(exc)})
+
+    @app.exception_handler(CompanyInactiveError)
+    async def company_inactive(request: Request, exc: CompanyInactiveError):
+        return JSONResponse(status_code=400, content={"code": "COMPANY_INACTIVE", "message": str(exc)})
+
     app.include_router(health_router)
     app.include_router(legacy_casos_router)
     app.include_router(casos_router)
     app.include_router(registro_router)
     app.include_router(auth_router)
+    app.include_router(companies_router)
+    app.include_router(admin_router)
     app.include_router(spa_router)
 
     return app

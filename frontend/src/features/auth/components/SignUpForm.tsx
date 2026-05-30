@@ -4,7 +4,6 @@ import { useAuth } from "@/context/AuthContext";
 import { AuthLogo } from "./AuthLogo";
 import { InputField } from "./InputField";
 import { CheckboxWithLinks } from "./CheckboxWithLinks";
-import { SocialLoginButtons } from "./SocialLoginButtons";
 import { register as apiRegister } from "@/lib/trackaidApi";
 
 export function SignUpForm() {
@@ -12,6 +11,7 @@ export function SignUpForm() {
   const { setUser } = useAuth();
   const [nombre, setNombre] = useState("");
   const [apellidos, setApellidos] = useState("");
+  const [companyKey, setCompanyKey] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,6 +20,7 @@ export function SignUpForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [globalError, setGlobalError] = useState("");
   const [sugerirLogin, setSugerirLogin] = useState(false);
+  const currentYear = new Date().getFullYear();
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -31,6 +32,7 @@ export function SignUpForm() {
       nombre: nombre.trim(),
       apellidos: apellidos.trim(),
       email: email.trim(),
+      companyKey: companyKey.trim(),
       password,
       confirmPassword,
       acceptTerms: acceptedTerms,
@@ -48,7 +50,7 @@ export function SignUpForm() {
       return;
     }
     if (data?.success && data.user) {
-      setUser(data.user);
+      setUser(data.user, data.accessToken);
       navigate("/panel", { replace: true });
     }
   }
@@ -57,9 +59,12 @@ export function SignUpForm() {
     <div className="w-full max-w-md mx-auto flex flex-col items-stretch">
       <Link
         to="/"
-        className="self-start text-sm font-medium text-teal-600 hover:text-teal-700 mb-6"
+        className="group self-start mb-6 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1.5 text-sm font-semibold text-primary-light transition-colors hover:border-primary/40 hover:bg-primary/10 hover:text-primary"
       >
-        regresar
+        <span aria-hidden className="text-base leading-none transition-transform group-hover:-translate-x-0.5">
+          ←
+        </span>
+        Volver
       </Link>
       <div className="flex flex-col items-center w-full">
       <AuthLogo />
@@ -98,6 +103,21 @@ export function SignUpForm() {
             onChange={(e) => setApellidos(e.target.value)}
             required
           />
+        </div>
+        <InputField
+          label="Llave privada de compañía"
+          id="companyKey"
+          name="companyKey"
+          placeholder="Ingresa la llave entregada por el webmaster"
+          value={companyKey}
+          error={errors.companyKey}
+          onChange={(e) => setCompanyKey(e.target.value)}
+          required
+        />
+        <div className="-mt-2">
+          <p className="text-xs text-gray-500">
+            Ingresa la llave exacta asignada por el webmaster para vincular tu cuenta.
+          </p>
         </div>
         <InputField
           label="Correo"
@@ -139,6 +159,8 @@ export function SignUpForm() {
         <CheckboxWithLinks
           id="terms"
           label="Acepto los"
+          termsHref="/terminos-y-condiciones"
+          privacyHref="/politica-de-privacidad"
           checked={acceptedTerms}
           onChange={(e) => setAcceptedTerms(e.target.checked)}
           required
@@ -159,12 +181,8 @@ export function SignUpForm() {
         </Link>
       </p>
 
-      <div className="mt-6 w-full">
-        <p className="text-center text-sm text-gray-500 mb-4">o regístrate con</p>
-        <SocialLoginButtons />
-      </div>
       <p className="mt-8 text-xs text-gray-400">
-        © 2024 TrackAid. Todos los derechos reservados.
+        © {currentYear} TrackAid. Todos los derechos reservados.
       </p>
       </div>
     </div>
