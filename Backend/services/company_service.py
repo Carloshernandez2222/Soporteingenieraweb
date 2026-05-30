@@ -12,7 +12,7 @@ from Backend.core.exceptions_companies import (
     CompanyKeyInUseError,
     CompanyNotFoundError,
 )
-from Backend.models.db_models import CompanyDB, UserCompanyDB
+from Backend.models.db_models import CompanyDB, UserCompanyDB, UserDB
 
 
 def normalizar_company_key(raw: str) -> str:
@@ -66,6 +66,11 @@ class ServicioCompany:
     def vincular_usuario(self, session: Session, user_id: UUID, company: CompanyDB) -> None:
         if not company.IsActive:
             raise CompanyInactiveError("La compañía está inactiva.")
+        user = session.get(UserDB, user_id)
+        if user:
+            user.CompanyID = company.CompanyID
+            session.add(user)
+            session.flush()
         link = session.exec(
             select(UserCompanyDB).where(
                 UserCompanyDB.UserID == user_id,
@@ -104,6 +109,11 @@ class ServicioCompany:
         )
 
     def compania_primaria_usuario(self, session: Session, user_id: UUID) -> CompanyDB | None:
+        user = session.get(UserDB, user_id)
+        if user and user.CompanyID:
+            company = session.get(CompanyDB, user.CompanyID)
+            if company and company.IsActive:
+                return company
         link = session.exec(
             select(UserCompanyDB)
             .where(UserCompanyDB.UserID == user_id, UserCompanyDB.IsActive == True)

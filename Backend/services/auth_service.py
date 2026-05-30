@@ -5,7 +5,8 @@ import time
 from typing import Any
 from sqlmodel import Session, select
 from Backend.core.database import get_engine
-from Backend.models.db_models import UserDB, PersonDB
+from Backend.core.user_names import nombres_usuario
+from Backend.models.db_models import UserDB
 from Backend.constants import ROL_DEFECTO
 from Backend.core.auth_roles import asignar_rol_usuario, obtener_rol_usuario
 from Backend.services.company_service import ServicioCompany
@@ -34,7 +35,7 @@ def _verify_password(password: str, stored: str) -> bool:
 
 def _usuario_a_dict(session: Session, user: UserDB) -> dict[str, Any]:
     """DTO para el frontend (incluye nombre, apellidos, rol y compañía)."""
-    persona = session.get(PersonDB, user.PersonID)
+    nombre, apellidos = nombres_usuario(session, user)
     try:
         rol = obtener_rol_usuario(session, user.UserID)
     except Exception:
@@ -44,8 +45,8 @@ def _usuario_a_dict(session: Session, user: UserDB) -> dict[str, Any]:
     return {
         "id": str(user.UserID),
         "email": user.Email,
-        "nombre": persona.FirstName if persona else "",
-        "apellidos": persona.LastName if persona else "",
+        "nombre": nombre,
+        "apellidos": apellidos,
         "rol": rol,
         "companyId": str(company.CompanyID) if company else None,
         "companyName": company.CompanyName if company else None,
@@ -74,14 +75,11 @@ class ServicioAuth:
 
             company = company_svc.resolver_o_crear_para_registro(session, company_key)
 
-            nueva_persona = PersonDB(FirstName=nombre.strip(), LastName=apellidos.strip())
-            session.add(nueva_persona)
-            session.flush()
-
             nuevo_usuario = UserDB(
                 Email=email_norm,
                 PasswordHash=_hash_password(password),
-                PersonID=nueva_persona.PersonID,
+                FirstName=nombre.strip(),
+                LastName=apellidos.strip(),
             )
             session.add(nuevo_usuario)
             session.flush()

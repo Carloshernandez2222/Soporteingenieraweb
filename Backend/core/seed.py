@@ -14,7 +14,7 @@ from sqlmodel import Session, select
 
 from Backend.constants import ROLES_USUARIO, ROL_DEFECTO, normalizar_rol
 from Backend.core.database import get_engine
-from Backend.models.db_models import CompanyDB, PersonDB, RoleDB, UserDB, UserRoleDB
+from Backend.models.db_models import CompanyDB, RoleDB, UserDB, UserRoleDB
 from Backend.services.auth_service import _hash_password
 from Backend.services.company_service import ServicioCompany, normalizar_company_key
 
@@ -106,22 +106,19 @@ def ejecutar_seed_demo() -> None:
             email = spec["email"].strip().lower()
             user = session.exec(select(UserDB).where(UserDB.Email == email)).first()
             if not user:
-                persona = PersonDB(
-                    FirstName=spec["nombre"],
-                    LastName=spec["apellidos"],
-                )
-                session.add(persona)
-                session.flush()
                 user = UserDB(
                     Email=email,
                     PasswordHash=password_hash,
-                    PersonID=persona.PersonID,
+                    FirstName=spec["nombre"],
+                    LastName=spec["apellidos"],
                 )
                 session.add(user)
                 session.flush()
                 logger.info("Usuario demo creado: %s (%s)", email, spec["rol"])
             else:
                 user.PasswordHash = password_hash
+                user.FirstName = spec["nombre"]
+                user.LastName = spec["apellidos"]
                 session.add(user)
                 logger.debug("Usuario demo actualizado (contraseña): %s", email)
 

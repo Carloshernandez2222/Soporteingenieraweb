@@ -3,7 +3,8 @@ from typing import Any, Optional, List
 from uuid import UUID
 from sqlmodel import Session, select
 from Backend.core.database import get_engine
-from Backend.models.db_models import CaseHistoryDB, CompanyDB, PersonDB, SupportCaseDB, OrderDB, UserDB
+from Backend.core.user_names import nombre_completo
+from Backend.models.db_models import CaseHistoryDB, CompanyDB, SupportCaseDB, OrderDB, UserDB
 from Backend.services.company_service import ServicioCompany
 from Backend.core.exceptions import CasoNoEncontradoError
 from Backend.patterns.observer import IObservador, ObservadorEmail, ObservadorLogs
@@ -75,21 +76,15 @@ class ServicioSoporte:
 
     def _caso_dict(self, session: Session, caso: SupportCaseDB) -> dict[str, Any]:
         solicitante = session.get(UserDB, caso.UserID)
-        persona = session.get(PersonDB, solicitante.PersonID) if solicitante else None
         asignado = session.get(UserDB, caso.AssignedTo) if caso.AssignedTo else None
-        persona_asignado = session.get(PersonDB, asignado.PersonID) if asignado else None
         company = session.get(CompanyDB, caso.CompanyID) if caso.CompanyID else None
         return {
             "case_id": str(caso.CaseID),
             "user_id": str(caso.UserID),
-            "solicitante": f"{persona.FirstName} {persona.LastName}".strip() if persona else "—",
+            "solicitante": nombre_completo(session, solicitante),
             "solicitante_email": solicitante.Email if solicitante else "",
             "assigned_to": str(caso.AssignedTo) if caso.AssignedTo else None,
-            "asignado_nombre": (
-                f"{persona_asignado.FirstName} {persona_asignado.LastName}".strip()
-                if persona_asignado
-                else None
-            ),
+            "asignado_nombre": nombre_completo(session, asignado) if asignado else None,
             "company_id": str(caso.CompanyID) if caso.CompanyID else None,
             "company_name": company.CompanyName if company else None,
             "type": caso.CaseType,
@@ -172,16 +167,13 @@ class ServicioSoporte:
             ).all()
             out: list[dict[str, Any]] = []
             for log in logs:
-                editor = session.get(UserDB, log.UpdatedBy)
-                persona = session.get(PersonDB, editor.PersonID) if editor else None
+                editor = session.get(UserDB, log.UpdatedBy) if log.UpdatedBy else None
                 out.append(
                     {
                         "status": log.Status,
                         "comentario": log.Comment,
                         "updated_at": log.UpdatedAt,
-                        "updated_by": (
-                            f"{persona.FirstName} {persona.LastName}".strip() if persona else ""
-                        ),
+                        "updated_by": nombre_completo(session, editor),
                     }
                 )
             return out

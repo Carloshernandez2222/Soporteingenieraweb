@@ -14,4 +14,10 @@ docker exec "${CONTAINER}" /opt/mssql-tools18/bin/sqlcmd \
   -S localhost -U sa -P "${SA_PASSWORD}" -C \
   -i /tmp/schema.sql
 
+echo "Migración modelo unificado (Users.FirstName / Companies Fase 2)..."
+docker cp scripts/migrate-unified-users.sql "${CONTAINER}:/tmp/migrate-unified-users.sql"
+docker exec "${CONTAINER}" /opt/mssql-tools18/bin/sqlcmd \
+  -S localhost -U sa -P "${SA_PASSWORD}" -C \
+  -i /tmp/migrate-unified-users.sql
+
 echo "Base TrackAidDB lista."

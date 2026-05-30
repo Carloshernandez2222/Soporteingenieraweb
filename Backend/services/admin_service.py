@@ -9,7 +9,7 @@ from Backend.constants import normalizar_rol
 from Backend.core.auth_roles import asignar_rol_usuario, obtener_rol_usuario
 from Backend.core.database import get_engine
 from Backend.core.exceptions import EmailAlreadyExistsError, UserNotFoundError
-from Backend.models.db_models import CompanyDB, PersonDB, UserDB, UserRoleDB
+from Backend.models.db_models import CompanyDB, UserDB, UserRoleDB
 from Backend.services.auth_service import _hash_password, _usuario_a_dict
 from Backend.services.company_service import ServicioCompany
 
@@ -39,14 +39,11 @@ class ServicioAdmin:
             if session.exec(select(UserDB).where(UserDB.Email == email_norm)).first():
                 raise EmailAlreadyExistsError()
 
-            persona = PersonDB(FirstName=nombre.strip(), LastName=apellidos.strip())
-            session.add(persona)
-            session.flush()
-
             user = UserDB(
                 Email=email_norm,
                 PasswordHash=_hash_password(password),
-                PersonID=persona.PersonID,
+                FirstName=nombre.strip(),
+                LastName=apellidos.strip(),
             )
             session.add(user)
             session.flush()

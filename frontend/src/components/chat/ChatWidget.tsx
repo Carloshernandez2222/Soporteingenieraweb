@@ -3,12 +3,13 @@ import { mensajeError } from "@/api";
 import { registrarCasoStrategy } from "@/lib/panelPatronesApi";
 import { ChatMessageBody } from "./ChatMessageBody";
 import {
-  botReply,
   CHAT_QUICK_PROMPTS,
   CHAT_WELCOME,
   nextChatId,
-  pareceSolicitudTicket,
+  procesarTurno,
+  type ChatCollectState,
   type ChatMessage,
+  type ChatRegisterPayload,
 } from "./chatLogic";
 
 const MAX_CHAT_CHARS = 500;
@@ -37,6 +38,7 @@ function SendIcon() {
 
 export function ChatWidget({ bare = false, className = "", storageKey }: ChatWidgetProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([CHAT_WELCOME]);
+  const [collect, setCollect] = useState<ChatCollectState>({});
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
@@ -56,42 +58,49 @@ export function ChatWidget({ bare = false, className = "", storageKey }: ChatWid
     try {
       const raw = localStorage.getItem(storageKey);
       if (!raw) return;
-      const parsed = JSON.parse(raw) as ChatMessage[];
-      if (!Array.isArray(parsed) || parsed.length === 0) return;
-      setMessages(parsed);
+      const parsed = JSON.parse(raw) as { messages?: ChatMessage[]; collect?: ChatCollectState };
+      if (parsed.messages?.length) setMessages(parsed.messages);
+      if (parsed.collect) setCollect(parsed.collect);
     } catch {
-      // Ignorar estado corrupto y continuar con bienvenida por defecto.
+      // Ignorar estado corrupto.
     }
   }, [storageKey]);
 
   useEffect(() => {
     if (!storageKey) return;
     try {
-      localStorage.setItem(storageKey, JSON.stringify(messages));
+      localStorage.setItem(storageKey, JSON.stringify({ messages, collect }));
     } catch {
       // Ignorar si el navegador bloquea storage.
     }
-  }, [messages, storageKey]);
+  }, [messages, collect, storageKey]);
 
   function pushMessage(msg: Omit<ChatMessage, "id">) {
     setMessages((prev) => [...prev, { ...msg, id: nextChatId() }]);
   }
 
-  async function intentarRegistro(mensaje: string) {
+  async function intentarRegistro(payload: ChatRegisterPayload) {
     setPending(true);
     try {
-      const data = await registrarCasoStrategy({ origen: "chatbot", mensaje });
+      const data = await registrarCasoStrategy({
+        origen: "chatbot",
+        mensaje: payload.mensaje,
+        nombre: payload.nombre,
+        email: payload.email,
+        descripcion: payload.descripcion,
+      });
+      setCollect({});
       pushMessage({
         role: "bot",
         kind: "success",
         ticketId: data.caso_id,
-        text: `Listo: tu incidencia quedó registrada como ticket **#${data.caso_id}**.\n\n${data.message || data.msg || "El equipo puede dar seguimiento con tu correo."}`,
+        text: `Listo: tu incidencia quedó registrada como ticket #${data.caso_id}.\n\n${data.message || data.msg || "El equipo puede dar seguimiento con tu correo."}`,
       });
     } catch (e) {
       pushMessage({
         role: "bot",
         kind: "error",
-        text: `No pude registrar el ticket: ${mensajeError(e)}\n\n${botReply(mensaje)}`,
+        text: `No pude registrar el ticket: ${mensajeError(e)}\n\nRevisa que el correo sea válido y que hayas descrito el problema. Puedes seguir escribiendo.`,
       });
     } finally {
       setPending(false);
@@ -103,12 +112,16 @@ export function ChatWidget({ bare = false, className = "", storageKey }: ChatWid
     const trimmed = text.trim();
     if (!trimmed) return;
 
-    if (pareceSolicitudTicket(trimmed)) {
-      await intentarRegistro(trimmed);
+    const turn = procesarTurno(collect, trimmed);
+    setCollect(turn.state);
+
+    if (turn.shouldRegister && turn.registerPayload) {
+      pushMessage({ role: "bot", text: turn.reply });
+      await intentarRegistro(turn.registerPayload);
       return;
     }
 
-    pushMessage({ role: "bot", text: botReply(trimmed) });
+    pushMessage({ role: "bot", text: turn.reply });
   }
 
   function sendUser(text: string) {
@@ -191,7 +204,8 @@ export function ChatWidget({ bare = false, className = "", storageKey }: ChatWid
       <div className="chat-composer">
         <p className="chat-hint">
           <span aria-hidden>💡</span>
-          Incluye tu correo para registrar un ticket real (máximo {MAX_CHAT_CHARS} caracteres)
+          Escribe como quieras: el bot entiende varios mensajes (correo + problema). Máx. {MAX_CHAT_CHARS}{" "}
+          caracteres.
         </p>
         <div className="chat-quick">
           {CHAT_QUICK_PROMPTS.map((q) => (
@@ -217,7 +231,7 @@ export function ChatWidget({ bare = false, className = "", storageKey }: ChatWid
             value={input}
             onChange={(e) => setInput(e.target.value.slice(0, MAX_CHAT_CHARS))}
             onKeyDown={onInputKeyDown}
-            placeholder="Ej: Me llamo Ana, ana@tienda.com, falla en pedido #4582…"
+            placeholder="Ej: No me carga el pedido… luego tu correo cuando quieras"
             disabled={pending}
             className="chat-input"
             autoComplete="off"
