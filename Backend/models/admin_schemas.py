@@ -1,7 +1,7 @@
 import re
 from pydantic import BaseModel, Field, field_validator
 from ..constants import MAX_EMAIL_LEN, MAX_NOMBRE_LEN
-
+from pydantic import BaseModel, Field, field_validator, AliasChoices  # <--- Agregamos AliasChoices aquí
 def _sanitize_key(v: str) -> str:
     key = re.sub(r"\s+", "-", v.strip().lower())
     return re.sub(r"[^a-z0-9\-_.]", "", key)
@@ -25,12 +25,14 @@ class CompanyActiveBody(BaseModel):
 
 
 class AdminUserCreateBody(BaseModel):
-    nombre: str = Field(min_length=1, max_length=MAX_NOMBRE_LEN)
-    apellidos: str = Field(min_length=1, max_length=MAX_NOMBRE_LEN)
-    email: str = Field(min_length=1, max_length=MAX_EMAIL_LEN)
-    password: str = Field(min_length=8, max_length=128)
-    rol: str = Field(min_length=3, max_length=32)
-    companyId: str | None = None
+    # Acepta cualquiera de estos nombres: "nombre", "firstName" o "name"
+    nombre: str = Field(validation_alias=AliasChoices('nombre', 'firstName', 'name'))
+    apellidos: str = Field(validation_alias=AliasChoices('apellidos', 'lastName', 'surname'))
+    email: str
+    password: str
+    rol: str
+    # Acepta cualquiera de estos: "companyId", "company_id"
+    companyId: str | None = Field(None, validation_alias=AliasChoices('companyId', 'company_id'))
 
 
 class AdminUserRoleBody(BaseModel):

@@ -53,3 +53,24 @@ class ServicioSoporte:
             return self._ejecutar_registro(session, user_id, descripcion, case_type)
         with Session(self.engine) as session:
             return self._ejecutar_registro(session, user_id, descripcion, case_type)
+    
+    def listar_casos_usuario(self, user_id: str) -> List[dict[str, Any]]:
+        try:
+            target_user_id = UUID(user_id)
+        except (ValueError, TypeError):
+            raise ValueError("El ID de usuario no tiene un formato válido.")
+
+        with Session(self.engine) as session:
+            # Filtramos los casos por el UserID
+            statement = select(SupportCaseDB).where(SupportCaseDB.UserID == target_user_id)
+            casos = session.exec(statement).all()
+            
+            return [
+                {
+                    "id": str(c.CaseID), 
+                    "descripcion": c.Description, 
+                    "tipo": c.CaseType, 
+                    "estado": c.Status,
+                    "prioridad": c.Priority
+                } for c in casos
+            ]
